@@ -1,0 +1,12 @@
+# Config options for wifi webconfig sample app
+
+# Copyright (c) 2023-2024 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "Wifi webconfig sample application"
+
+config NET_SAMPLE_HTTP_PORT
+	int "Port number for http server"
+	default 80
+
+source "Kconfig.zephyr"

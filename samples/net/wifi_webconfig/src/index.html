@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wi-Fi web configuration</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+    :root {
+        --clr1: rgb(0,112,197);
+        --clr1h: rgb(0,160,245);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background-color: #FFF;
+        font-family: Verdana Neue, Helvetica, Arial, sans-serif;
+        font-weight: normal;
+        color: #666;
+        margin: 0px;
+    }
+
+    h1 {
+        line-height: 28px;
+        margin: 0px;
+        padding: 0px;
+        text-indent: 0px;
+    }
+
+    h2 {
+        margin-top: 0px;
+    }
+
+    p
+    {
+        text-align: justify;
+    }
+
+    /* For mobile phones: */
+    [class*="col-"] {
+        width: 100%;
+    }
+
+    @media only screen and (min-width: 768px) {
+        /* For desktop: */
+        .col-1 {width: 8.33%;}
+        .col-2 {width: 16.66%;}
+        .col-3 {width: 25%;}
+        .col-4 {width: 33.33%;}
+        .col-5 {width: 41.66%;}
+        .col-6 {width: 50%;}
+        .col-7 {width: 58.33%;}
+        .col-8 {width: 66.66%;}
+        .col-9 {width: 75%;}
+        .col-10 {width: 83.33%;}
+        .col-11 {width: 91.66%;}
+        .col-12 {width: 100%;}
+    }
+
+    [class*="col-"] {
+        float: left;
+        padding: 15px;
+    }
+
+    .row::after {
+        content: "";
+        clear: both;
+        display: table;
+    }
+
+    .menu_button
+    {
+        text-decoration: none;
+        font-size: 16px;
+        color: #FFF;
+        margin-top : 1%;
+        margin-bottom : 1%;
+        width: 100%;
+        min-height: 70px;
+        background: var(--clr1);;
+        transition: color 0.1s, background 0.1s;
+        cursor: pointer;
+        border: none;
+    }
+
+    .menu_button:hover
+    {
+        text-decoration: none;
+        z-index: 50;
+        background: var(--clr1h);
+    }
+
+    #clear_confirm button.warning, #clientJoin_banner button.warning {
+        background: #d72c2c;
+        border: 3px solid #9e1212;
+    }
+    #clear_confirm button.warning:hover, #clientJoin_banner button.warning:hover {
+        background: #b31414;
+    }
+
+    .menu_button:focus, #ap_password_page button:focus
+    {
+        outline: 0;
+    }
+
+    .header_banner
+    { 
+        overflow:auto;
+        background: var(--clr1);
+    }
+
+    .header_container
+    {
+        margin:auto;
+        max-width: 768px;
+    }
+
+    .logo img
+    {
+        max-width: 80px;
+        display: block;
+        margin:auto;
+    }
+
+    .header_text
+    {
+        font-size: 26px;
+        text-align: center;
+        font-weight: bolder;
+        font-style: normal;
+        color: rgba(240,240,240,1);
+        padding-top: 0;
+    }
+
+    #board_status {
+        display: inline;
+    }
+
+    @media only screen and (min-width: 768px) {
+        .logo img{
+            max-width: 150px;
+        }
+
+        .header_text {
+            text-align: left;
+            line-height: 54px;
+            font-size: 36px;
+            padding-top: 15px;
+        }
+
+    }
+
+    .page_body
+    {
+        margin: auto;
+        margin-top: 2px;
+        width:100%;
+        max-width: 768px;
+    }
+
+    .page_content
+    {
+        text-align: left; 
+        border-left: 1px solid #C3CFD1;
+    }
+
+    .page_content h3 {
+        margin-bottom: 3px; 
+    }
+
+    #wifi_list {
+        margin-top: 10px;
+    }
+
+    #wifi_list div {
+        border: 1px solid #acacac;
+        padding: 10px;
+        background: #f4f4f4;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        line-height: 22px;
+        cursor: pointer;
+        transition: transform .2s, background .2s, color .2s;
+    }
+
+    #wifi_list div:hover {
+        background: var(--clr1h);
+        transform: scale(1.02);
+    }
+
+    .menu_row
+    {
+        margin-bottom: 2%;
+        text-align: center;
+    }
+
+    #board_info {
+        margin-bottom: 10px;
+    }
+
+
+    #board_name {
+        font-weight: bold;
+    }
+
+
+    .statusIndicator {
+        width: 48%;
+        background: #e3e3e3;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
+        font-size: 23px;
+        line-height: 85px;
+        text-align: center;
+        display:inline-block;
+        margin-bottom: 5px;
+        min-width: 70px;
+    }
+
+    .statusIndicator.active {
+        animation: indicatorFade 2s linear infinite alternate;
+    }
+
+    @keyframes indicatorFade {
+        0% { background: #c9d200; }
+        100% { background: #7bb1db; }
+    }
+
+    @media only screen and (min-width: 768px) {
+        .menu_row{
+            width: 100%
+        }
+    }
+
+    #section_networks{
+        padding: 20px;
+        padding-top: 20px;
+        background: #c4e5ff;
+        padding-top: 1px;
+        border: #ccc 1px solid;
+        border-radius: 5px;
+    }
+
+    #section_networks .wifi_network h3 {
+        margin: 5px;
+        text-align: center;
+        color: gray;
+    }
+
+    .wifi_network_value {
+        float:right;
+    }
+
+    .wifi_network_ssid {
+        font-weight: bold;
+        float:left;
+    }
+
+    #loader_page{
+        background: #000000a6;
+        position: fixed;
+
+        top: 0;
+        padding-top: 150px;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
+    }
+
+    #loader_page h2 {
+        font-size: 45px;
+        color:#7bb1db;
+        text-align: center;
+    }
+
+    .loader {
+        margin: auto;
+        border: 15px solid #fff;
+        border-top: 15px solid #7bb1db;
+        border-radius: 50%;
+        width: 100px;
+        height: 100px;
+        animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .banner_background {	
+        background: #000000a6;
+        position: fixed;
+
+        top: 0;
+        padding-top: 150px;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
+    }
+
+    .banner_dialogue{
+        margin: auto;
+        padding:20px;
+        border-radius: 10px;
+        background: #fff;
+        width:95%;
+        max-width: 450px;
+    }
+
+    #mode_switch_dialogue {
+        max-width: 550px;
+    }
+
+    @media only screen and (max-width: 490px) {
+        .banner_background{
+            padding-top: 50px;
+        }
+    }
+
+
+    #ap_password_page input{
+        font-size: 23px;
+        margin-bottom:5px;
+        padding:2px;
+        width: 100%;
+    }
+
+    #ap_password_page span{
+        font-size:18px;
+    }
+
+    #ap_password_page span input{
+        width: 17px;
+        height: 17px;
+        margin: 4px;
+    }
+
+    #ap_password_page label{
+        font-size: 23px;
+        margin-bottom:5px;
+        padding:2px;
+        display: inline-block;
+        text-align: right;
+    }
+
+    #post_errors{
+        color: #df2020;
+        font-size: 22px;
+        font-weight: bold;
+    }
+
+    #mode_switch_dialogue h2 span {
+        text-decoration: underline;
+    }
+
+    #error_banner_dialogue h2 {
+        color: #EA2C2C;
+        font-size: 30px;
+    }
+
+    #success_banner_dialogue h2 {
+        color: #C9D200;
+        font-size: 30px;
+    }
+    </style>
+    <script>
+let g_state = "ap";
+
+
+function init() {
+    // Setup periodic API calls
+    setInterval(fetch_get, 10000, '/status', '', cb_status, ()=>{});
+
+    // Initial page hydration
+    fetch_get('/status', '', cb_status, cb_err);
+    fetch_get('/scan', '', cb_scan, cb_err);
+}
+
+function fetch_get(endpoint, params, cb, cb_err) {
+    const api_url = `${endpoint}${params}`;
+    fetch(api_url)
+        .then(r => r.json())
+        .then(cb)
+        .catch(cb_err);
+}
+
+function cb_status(data) {
+    document.getElementById("board_name").innerHTML = data.info.name;
+    document.getElementById("board_ip").innerHTML = data.info.ip;
+    document.getElementById(`status_${data.info.status}`)
+        .classList.add("active")
+    document.getElementById(`status_${data.info.status === 'ap' ? 'client' : 'ap'}`)
+        .classList.remove("active")
+    g_state = data.info.status;
+}
+
+function scan() {
+    openDialogue("loader_page");
+    fetch_get('scan', '', cb_scan, cb_err);
+}
+
+function cb_scan(data) {
+    let networks = data["networks"];
+    if (!networks) {
+        throw Error("Wifi scan failed");
+    }
+
+    let wifi_list = document.getElementById("wifi_list");
+    wifi_list.innerHTML = "";
+
+    networks.forEach((net) => {
+            console.log(net);
+            net.security = net.security.trim().toLowerCase();
+            net.open = net.security == "open" ? true : false;
+            net.is5GHz = net.channel > 13 ? true : false;
+            net.ssid = net.ssid ? net.ssid : "[Hidden SSID]";
+            net.enterprise = false; // TODO enterprise
+            let display5G = net.is5GHz ? "[5GHz]" : "";
+
+            wifi_list.innerHTML += `<div onclick='connect_net("${net.ssid}", ${net.open}, ${net.enterprise}, "${net.security}")'>
+                    <span class="wifi_network_value wifi_network_ssid">${net.ssid} (${net.security}) ${display5G}</span>
+                    <br>
+                    <span>BSSID:</span><span class="wifi_network_value">${net.bssid}</span>
+                    <br>
+                    <span>Channel:</span><span class="wifi_network_value">${net.channel}</span>
+                    <br>
+                    <span>Signal Strength:</span><span class="wifi_network_value">${net.signal}</span>
+                    <br>
+                </div>`;
+        }
+    );
+
+    if (networks.length === 0) {
+        wifi_list.innerHTML  = "<div>No Networks Available</div>";
+    }
+    closeDialogue("loader_page");
+}
+
+function cb_reset(data) {
+    if(data.status == "success"){
+        open_success_dialogue(`Successfully cleared the flash memory and reset to an AP. Please connect your device back to the AP and browse to the IP: <a href="http://${data.new_ip}">${data.new_ip}</a>.`, "Success");
+    } 
+    else {
+        throw Error("The board reported a failure during the reset action");
+    }
+}
+
+function cb_err(err) {
+    open_error_dialogue(`Error while handling the server response: ${err}. Check the console for more info.`, "An Error has occurred");
+}
+
+function showPassword() {
+    var x = document.getElementById("post_password");
+    if (x.type === "password") {
+        x.type = "text";
+    } else {
+        x.type = "password";
+    }
+}
+
+function renderDuplicates(){
+    let nets = document.getElementsByClassName("duplicate_network");
+    let style = ""
+
+    // If the check box is checked, display duplicate stations
+    if(document.getElementById("all_nets").checked){
+        style = "block";
+    } else {
+        style = "none";
+    }
+
+    for(let i = 0; i < nets.length; i++){
+        nets[i].style.display = style
+    }
+}
+
+function connect_net(ssid, open, ent, security){
+    if (ssid == "[Hidden SSID]"){
+        open_success_dialogue("Connecting to hidden SSIDs is not supported.", "Connecting to Hidden SSID");
+        return;
+    }
+
+    if(ent){
+        open_success_dialogue("Connecting to Enterprise networks is not supported.", "Connecting to Enterprise Wi-Fi");
+        return;
+    }
+
+    if (g_state == "client") {
+        open_cJoin_dialogue();
+        return;
+    }
+
+    document.getElementById("post_ssid").value = ssid;
+    document.getElementById("post_security").value = security;
+    document.getElementById("post_password").value = "";
+    document.getElementById("post_errors").innerHTML = "";
+    openDialogue("ap_password_page", true)
+
+    if(open){
+        document.getElementById("password_input_field").style.display = "none";
+
+    } else {
+        document.getElementById("password_input_field").style.display = "block";
+    }
+}
+
+function validateForm() {
+    if(document.getElementById("post_ssid").value.length == 0) {
+        document.getElementById("post_errors").innerHTML = "SSID can't be blank.";
+        return false;
+    }
+
+    // If we have an open access point, dont check password
+    if(document.getElementById("password_input_field").style.display == "block") {
+        if(document.getElementById("post_password").value.length == 0) {
+            document.getElementById("post_errors").innerHTML = "Password can't be blank.";
+            return false;
+        }
+
+        if(document.getElementById("post_password").value.length < 8) {
+            document.getElementById("post_errors").innerHTML = "Password must be at least 8 characters.";
+            return false;
+        }
+    }
+
+    closeDialogue("ap_password_page");
+    attemptConnect();
+    return true;
+}
+
+function cb_connect(data) {
+    if (!data) {
+        throw Error("Connect timed out");
+    }
+
+    if (data.status == "success") {
+        open_success_dialogue(`Now join the <b>${data.ssid}</b> network and browse to the IP: <a href="http://${data.new_ip}">${data.new_ip}</a>.`,"Successfully connected");
+    }
+    else {
+        throw Error("Connection failed. Make sure you entered the correct password.");
+    }
+}
+
+function attemptConnect(){
+    open_mode_switch_dialogue();
+    var ssid =  document.getElementById("post_ssid").value;
+    var password =  document.getElementById("post_password").value;
+    var params = `?ssid=${ssid}&pass=${password}`
+
+    fetch_get('/connect', params, cb_connect, cb_err);
+}
+
+function openDialogue(id, stopPropagation){
+    document.getElementById(id).style.display = "block";
+
+    if(typeof stopPropagation !== "undefined" && stopPropagation){
+        document.getElementById(`${id}_dialogue`).onclick = function(event){
+            event.stopPropagation();
+        }
+    }
+}
+
+function closeDialogue(id){
+    document.getElementById(id).style.display = "none";
+}
+
+function open_mode_switch_dialogue(){
+    openDialogue("mode_switch_loader");
+    document.getElementById("mode_switch_network_name").innerHTML = document.getElementById("post_ssid").value;
+}
+
+function open_clear_board_dialogue() {
+    openDialogue("clear_confirm", true);
+}
+
+function open_cJoin_dialogue(){
+    openDialogue("clientJoin_banner", true);
+}
+
+function open_success_dialogue(msg, title){
+    // Close all other dialogues
+    closeDialogue("loader_page");
+    closeDialogue("mode_switch_loader");
+    closeDialogue("error_banner");
+    closeDialogue("clear_confirm");
+    closeDialogue("clientJoin_banner");
+
+
+    document.getElementById("success_msg").innerHTML = msg;
+    document.getElementById("success_title").innerHTML = title;
+    openDialogue("success_banner");
+}
+
+function open_error_dialogue(msg, title){
+    // Close all other dialogues
+    closeDialogue("loader_page");
+    closeDialogue("mode_switch_loader");
+    closeDialogue("success_banner");
+    closeDialogue("clear_confirm");
+    closeDialogue("clientJoin_banner");
+
+    document.getElementById("error_msg").innerHTML = msg;
+    document.getElementById("error_title").innerHTML = title;
+    openDialogue("error_banner");
+}
+
+    </script>
+</head>
+
+<body onload="init()">
+    <div id="page_main">
+        <div id="page_header" class="header_banner">
+            <div class="header_container row">
+                <div class="logo col-4">
+                    <a href="https://www.zephyrproject.org/" title="Zephyr"><img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4gPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSIwIDAgNDQwIDIyOCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiM3OTI5ZDI7fS5jbHMtMntmaWxsOiM5NDU0ZGI7fS5jbHMtM3tmaWxsOiNhZjdmZTQ7fS5jbHMtNHtmaWxsOnVybCgjbGluZWFyLWdyYWRpZW50KTt9LmNscy01e2ZpbGw6dXJsKCNsaW5lYXItZ3JhZGllbnQtMik7fS5jbHMtNntmaWxsOnVybCgjbGluZWFyLWdyYWRpZW50LTMpO30uY2xzLTd7ZmlsbDp1cmwoI2xpbmVhci1ncmFkaWVudC00KTt9LmNscy04e2ZpbGw6I2ZmZjt9PC9zdHlsZT48bGluZWFyR3JhZGllbnQgaWQ9ImxpbmVhci1ncmFkaWVudCIgeDE9IjE3NC4zNzYxNSIgeTE9Ijg0LjI1MTYzIiB4Mj0iMjY4LjI4MTM5IiB5Mj0iODQuMjUxNjMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM3OTI5ZDIiPjwvc3RvcD48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwMDcwYzUiPjwvc3RvcD48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0ibGluZWFyLWdyYWRpZW50LTIiIHgxPSIxODAuNzY3NDEiIHkxPSIxLjUyNDI0IiB4Mj0iMTc5Ljk4MDkiIHkyPSI5NC4zNTAzOSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzAwYWVmZiI+PC9zdG9wPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzk0NTRkYiI+PC9zdG9wPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJsaW5lYXItZ3JhZGllbnQtMyIgeDE9IjIzMi40NTU2OCIgeTE9IjQwLjAxNDk0IiB4Mj0iMjEyLjQwNzM3IiB5Mj0iNS4yOTAyNSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzY2YTlkYyI+PC9zdG9wPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2IxZTRmYSI+PC9zdG9wPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJsaW5lYXItZ3JhZGllbnQtNCIgeDE9IjIzNi45MTUyMSIgeTE9IjEyLjgwNjczIiB4Mj0iMjQ4LjMwNTk3IiB5Mj0iOTEuNTkyODUiIHhsaW5rOmhyZWY9IiNsaW5lYXItZ3JhZGllbnQtMiI+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PGcgaWQ9IkNvbG9yZWRfUG9zaXRpdmUiIGRhdGEtbmFtZT0iQ29sb3JlZCBQb3NpdGl2ZSI+PHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjEzOS4yMzUgMTIxLjgxNiAxMDguMjEzIDEzNC45MTQgMTM0LjU4OSAxNDguMjM1IDEzOS4yMzUgMTIxLjgxNiI+PC9wb2x5Z29uPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSI3Mi4yNTcgMTM5LjE3NCAzOS4xNjcgMTI2Ljc4NiA0Ni44MzkgMTUyLjgwMSA3Mi4yNTcgMTM5LjE3NCI+PC9wb2x5Z29uPjxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSI4Ny45NDggMTE1Ljg4OSAxMDguMjEzIDEzNC45MTQgNzIuMjU3IDEzOS4xNzQgODcuOTQ4IDExNS44ODkiPjwvcG9seWdvbj48cG9seWdvbiBjbGFzcz0iY2xzLTMiIHBvaW50cz0iNDMuMTYyIDk4LjAxMyAzOS4xNjcgMTI2Ljc4NiAxNC4xNTUgMTAxLjgyMSA0My4xNjIgOTguMDEzIj48L3BvbHlnb24+PHBvbHlnb24gY2xhc3M9ImNscy00IiBwb2ludHM9IjEzOS4yMzUgMTIxLjgxNSAyMjAuODk4IDQ2LjY4OCAyNTcuNjA5IDk1LjMzMiAxMzkuMjM1IDEyMS44MTUiPjwvcG9seWdvbj48cG9seWdvbiBjbGFzcz0iY2xzLTUiIHBvaW50cz0iMTM5LjIzNSAxMjEuODE1IDE3NC4xMTYgMTEuMjc1IDIyMC44OTggNDYuNjg4IDEzOS4yMzUgMTIxLjgxNSI+PC9wb2x5Z29uPjxwb2x5Z29uIGNsYXNzPSJjbHMtNiIgcG9pbnRzPSIxNzQuMTE2IDExLjI3NSAyNTcuNjA5IDExLjI3NSAyMjAuODk4IDQ2LjY4OCAxNzQuMTE2IDExLjI3NSI+PC9wb2x5Z29uPjxwb2x5Z29uIGNsYXNzPSJjbHMtNyIgcG9pbnRzPSIyNTcuNjA5IDk1LjMzMiAyNTcuNjA5IDExLjI3NSAyMjAuODk4IDQ2LjY4OCAyNTcuNjA5IDk1LjMzMiI+PC9wb2x5Z29uPjxwYXRoIGNsYXNzPSJjbHMtOCIgZD0iTTE3My43Mjg0OSwyMDQuMTYwNzF2LTguODMybDIzLjU2NDQ1LTMyLjk1MzEzSDE3NC44NDE3N3YtOS41NzQyMWgzNC45NTd2OC40MjM4MmwtMjMuNzg3MTEsMzMuMzYxMzNoMjQuNDE4djkuNTc0MjJaIj48L3BhdGg+PHBhdGggY2xhc3M9ImNscy04IiBkPSJNMjI1LjAwNTgzLDE4Ny4yMDE3M3EuMjU5MjgsNS4xOTU3OSwyLjUyMzQ0LDcuNDU5LDIuMjYzMTksMi4yNjM5Miw3LjEyNSwyLjI2MzY3YTE1Ljc5OCwxNS43OTgsMCwwLDAsNC45NTQxLS43MDUwOCw3LjkzNjU4LDcuOTM2NTgsMCwwLDAsMy43Mjk0OS0yLjcwOWw3LjEyNSw1LjA4NGExNC40MTQ4MiwxNC40MTQ4MiwwLDAsMS02LjA2NzM4LDUuMDQ2ODhRMjQwLjY2NiwyMDUuMzExMSwyMzQuMjA5LDIwNS4zMTExcS05LjYxMjMxLDAtMTQuMzQyNzgtNS4wNDY4Ny00LjczMTQ0LTUuMDQ2MzktNC43MzE0NC0xNS4yNTIsMC0yMC44OTIzMywxOC43MDMxMi0yMC44OTI1Nyw4LjMxMTUzLDAsMTIuNjcyODYsNC42OTQzMyw0LjM1OTM4LDQuNjk0ODIsNC4zNjAzNSwxMy42NzQ4MXY0LjcxMjg5Wm0xNi4zNjUyNC02LjYwNTQ3cTAtOC44Njg5LTcuNzU1ODYtOC44NjkxNGE4Ljg2NzA2LDguODY3MDYsMCwwLDAtNC4xOTMzNi44NzIwNyw2LjUxOTU3LDYuNTE5NTcsMCwwLDAtMi42MTYyMSwyLjU5NzY1LDE2LjM4NDA3LDE2LjM4NDA3LDAsMCwwLTEuNTQsNS4zOTk0MloiPjwvcGF0aD48cGF0aCBjbGFzcz0iY2xzLTgiIGQ9Ik0yOTMuOTQ4MjIsMTg0LjQxODUyYTI5LjkzMzQ3LDI5LjkzMzQ3LDAsMCwxLTEuODkyNTgsMTEuMDU4NiwxNS44NjkzNSwxNS44NjkzNSwwLDAsMS01LjQxOCw3LjMxMDU0LDE0LjA5MTU0LDE0LjA5MTU0LDAsMCwxLTguNDIzODMsMi41MjM0NCwxNi4wNDA4OSwxNi4wNDA4OSwwLDAsMS0xMS4wMjE0OC00LjA0NDkydjE3LjU1MjczaC05LjU3NDIyVjE2NS4yMzNoOC44MzJ2My44MjIyNmEyMi45ODI3NywyMi45ODI3NywwLDAsMSw1LjYyMjA3LTMuNjE4MTYsMTYuNDYwNzQsMTYuNDYwNzQsMCwwLDEsNi43NzI0Ni0xLjMxNzM4cTcuMzg0MjgsMCwxMS4yNDQxNCw1LjE5NTMxUTI5My45NDcyNSwxNzQuNTEwODEsMjkzLjk0ODIyLDE4NC40MTg1MlptLTkuODcxMS4xNDg0NHEwLTUuNjc3NzQtMS45NjY4LTguODUwNThhNi40NTQ2Nyw2LjQ1NDY3LDAsMCwwLTUuODYzMjgtMy4xNzI4NiwxMS44MTI0NiwxMS44MTI0NiwwLDAsMC00LjgwNTY2LDEuMDk0NzMsMTYuMDg3ODYsMTYuMDg3ODYsMCwwLDAtNC4yNDksMi42OTA0M3YxNy4wMzMyYTE1LjMwNjkxLDE1LjMwNjkxLDAsMCwwLDMuNzY2NiwyLjQzMDY3LDEwLjcyMzcyLDEwLjcyMzcyLDAsMCwwLDQuNjIwMTEsMS4wNTc2MSw3LjE0MDI3LDcuMTQwMjcsMCwwLDAsNi4yMTU4My0zLjM1ODM5QTE1LjYyMTA1LDE1LjYyMTA1LDAsMCwwLDI4NC4wNzcxMiwxODQuNTY3WiI+PC9wYXRoPjxwYXRoIGNsYXNzPSJjbHMtOCIgZD0iTTMyNS45NjU3OSwyMDQuMTYwNzFWMTgyLjcxMTQ5cTAtNi4xNTk2Ni0xLjE1MDM5LTguMTY0MDZhNC4zMDQ1LDQuMzA0NSwwLDAsMC00LjA4Mi0yLjAwMzkxcS00LjI2ODU1LDAtMTAuMjc5Myw1LjY0MDYzdjI1Ljk3NjU2aC05LjU3NDIxVjE0OC45MDQ4NWg5LjU3NDIxdjIxLjM3NWEyMi4wNDY0OCwyMi4wNDY0OCwwLDAsMSw2LjQ5NDE1LTQuNjAxNTYsMTYuMzM3NjUsMTYuMzM3NjUsMCwwLDEsNi43NTM5LTEuNTU4NTlxNi41MzAyOCwwLDkuMTg0NTcsMy42NzM4MiwyLjY1Mjg0LDMuNjczODMsMi42NTMzMiwxMC4zOTA2M3YyNS45NzY1NloiPjwvcGF0aD48cGF0aCBjbGFzcz0iY2xzLTgiIGQ9Ik0zNDAuMDYwNTIsMjA5LjM5MzEzYTE3LjM4NjQ5LDE3LjM4NjQ5LDAsMCwwLDUuNjAzNTIsMS4wNzYxNyw1LjkwNzU2LDUuOTA3NTYsMCwwLDAsMy43ODUxNS0xLjI5ODgycTEuNjMxODQtMS4yOTkzMSwzLjM3Ny01LjM4MDg2bDEuMDAyLTIuMzAwNzhMMzM5Ljc2MzY1LDE2NS4yMzNIMzQ5LjcwOWw5LjIwMzEyLDI0Ljg2MzI4LDkuNDI1NzgtMjQuODYzMjhoOS43MjI2NmwtMTYuNzM2MzMsNDEuNTk5NjFhMzEuMDA2LDMxLjAwNiwwLDAsMS0zLjk3MDcsNy40MjE4NywxMS4zNjI0NSwxMS4zNjI0NSwwLDAsMS00LjUwODc5LDMuNDg4MjgsMTYuOTA3MiwxNi45MDcyLDAsMCwxLTYuNDc1NTksMS4wNzYxNywzMS44NjYyNSwzMS44NjYyNSwwLDAsMS04LjM0OTYxLTEuMTEzMjhaIj48L3BhdGg+PHBhdGggY2xhc3M9ImNscy04IiBkPSJNNDA1Ljk5NjA3LDE3NC41ODQ1NGE4Ljg1MTM5LDguODUxMzksMCwwLDAtMy45MzM2LS43NDIxOSwxMC41ODY4OSwxMC41ODY4OSwwLDAsMC01LjA2NTQzLDEuMjgwMjgsMjIuMzI0MzYsMjIuMzI0MzYsMCwwLDAtNC45MTcsMy43Mjk0OXYyNS4zMDg1OWgtOS41NzQyMlYxNjUuMjMzaDkuNTc0MjJ2NS41NjY0YTI0Ljk5MywyNC45OTMsMCwwLDEsNS4yNjk1My00LjQxNiwxMS43NTEzMSwxMS43NTEzMSwwLDAsMSw2LjMwODYtMS43NDQxNCw4LjQ3MzIzLDguNDczMjMsMCwwLDEsNC4yMzA0Ny43NzkyOVoiPjwvcGF0aD48cGF0aCBjbGFzcz0iY2xzLTgiIGQ9Ik00MTkuMzA3NDUsMTYyLjgwODExaC0uOTA0MDV2Mi4wNzY4MmgtMS4yMzR2LTUuNzk1NzRoMi43MTE0NmExLjgwNDksMS44MDQ5LDAsMCwxLDEuOTQ2NDMsMS44NjgyOCwxLjY2MzE3LDEuNjYzMTcsMCwwLDEtMS4yNjkyNiwxLjcyMDI1bDEuMzAzODUsMi4yMDcyMWgtMS40MTY2Wm0uMzkwODEtMi42NTg4OUg0MTguNDAzNHYxLjU5ODg2aDEuMjk0ODZhLjgwMjIuODAyMiwwLDEsMCwwLTEuNTk4ODZaIj48L3BhdGg+PHBhdGggY2xhc3M9ImNscy04IiBkPSJNNDE5LjUxNTI2LDE2OC4yODA4MmE2LjI5Mzc2LDYuMjkzNzYsMCwxLDEsNi4yOTQzNS02LjI5Mzk1QTYuMzAwODIsNi4zMDA4MiwwLDAsMSw0MTkuNTE1MjYsMTY4LjI4MDgyWm0wLTExLjc5MTNhNS40OTc1NCw1LjQ5NzU0LDAsMSwwLDUuNDk4MTIsNS40OTczNUE1LjUwMzc0LDUuNTAzNzQsMCwwLDAsNDE5LjUxNTI2LDE1Ni40ODk1MloiPjwvcGF0aD48L2c+PC9zdmc+IA==" alt="Zephyr Project" width="100%" height="auto"></a>
+                </div>
+                <div class="header_text col-8">
+					Wi-Fi web configuration
+                </div>
+            </div>
+        </div>
+        <div class="page_body">
+            <div class="row">
+                <div class="col-4">
+                    <div class="menu_row">
+                        <div id="board_name">unknown board</div>
+                        <div id="board_ip">not connected</div>
+                    </div>
+                    <div class="menu_row">
+                        <div id="board_status">
+                            <div>Current Wi-Fi Mode:</div>
+                            <div class="statusIndicator" id="status_ap">AP</div>
+                            <div class="statusIndicator" id="status_client">Client</div>
+                        </div>
+                    </div>
+                    <div class="menu_row">
+                        <button type="button" name="main_b" class="menu_button" onclick="scan()">Scan Wi-fi Networks</button>
+                        <br>
+                        <button type="button" name="main_b" class="menu_button" onclick="open_clear_board_dialogue()">Clear Board settings</button>
+                    </div>
+                </div>
+                <div id="p_content" class="page_content col-8">
+                    <div id='section_networks'>
+                        <h3> Available Wi-Fi Networks - Click to Join:</h3>
+                        <input type="checkbox" id="all_nets" name="scales" onclick="renderDuplicates();">
+                        <label for="all_nets">Show All networks</label>
+                        <div id="wifi_list">
+                            <div id='wifi_no_networks'>No Networks Available</div>
+                        </div>
+                    </div>
+                    <h4>Description</h3>
+                    <p>
+                        By default, the board creates an Access Point and starts a server which provides this web interface.
+                    </p>
+                    <p>
+                        This interface shows you nearby available Wi-Fi networks. Clicking on the one you would like to connect to allows you to enter the credentials. The board will then switch to client mode and attempt to connect to it.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="loader_page" class="banner_background" style="display:none;">
+            <h2> Scanning....</h2>
+            <div class="loader">
+            </div>
+        </div>
+
+        <div id="ap_password_page" class="banner_background" style="display:none;" onclick='closeDialogue("ap_password_page");'>
+            <div id="ap_password_page_dialogue" class="banner_dialogue">
+                <h2>Enter Credentials</h2>
+
+                <div>
+                    <label for=post_ssid>SSID:</label>
+                    <input id="post_ssid" value="SSID" type="text" name="post_ssid" readonly>
+                </div>
+                <div>
+                    <label for=post_security>Security:</label>
+                    <input id="post_security" value="security" type="text" name="post_security" readonly>
+                </div>
+                <div id="password_input_field">
+                    <label for=post_passphrase>Password:</label>
+                    <input id="post_password" value="Password" type="password" name="post_passphrase" maxlength="63">
+                    <span>
+                    <input type="checkbox" onclick="showPassword()">Show Password
+                    </span>
+                </div>
+                <span id="post_errors"></span><br>
+                 <button value="" onclick="validateForm()">Connect</button>
+            </div>
+        </div>
+
+        <div id="clear_confirm" class="banner_background" style="display:none;" onclick="closeDialogue('clear_confirm');">
+            <div id="clear_confirm_dialogue" class="banner_dialogue">
+                <h2>Clearing settings... Are you sure?</h2>
+                <p>This will clear the saved Wi-Fi credentials from the board flash and reset the board back to AP mode. You will have to manually reconnect to the board access point.</p>
+
+                <button class="menu_button warning" type="submit" value="" onclick="fetch_get('/reset', '', cb_reset, cb_err)">Clear</button>
+                <button class="menu_button" type="submit" value="" onclick="closeDialogue('clear_confirm')">Cancel</button>
+
+            </div>
+        </div>
+
+        <div id="mode_switch_loader" class="banner_background" style="display:none;">
+            <div id="mode_switch_dialogue" class="banner_dialogue">
+                <h2>Attempting connection to <span id="mode_switch_network_name"></span> Network</h2>
+                <p>You will get disconnected from the current Wi-Fi Access-point while the board switches as a client to your selected network.</p>
+                 <p>Please connect your device to that network to continue.</p>
+
+                <div class="loader">
+                </div>
+
+            </div>
+        </div>
+
+        <div id="error_banner" class="banner_background" style="display:none;" onclick="closeDialogue('error_banner');">
+            <div id="error_banner_dialogue" class="banner_dialogue">
+                <h2 id="error_title">An Error has occurred</h2>
+                <p id="error_msg"> </p>
+
+            </div>
+        </div>
+
+        <div id="success_banner" class="banner_background" style="display:none;" onclick="closeDialogue('success_banner');">
+            <div id="success_banner_dialogue" class="banner_dialogue">
+                <h2 id="success_title">Success!</h2>
+                <p id="success_msg"> </p>
+
+            </div>
+        </div>
+
+        <div id="clientJoin_banner" class="banner_background" style="display:none;" onclick="closeDialogue('clientJoin_banner');">
+            <div id="clientJoin_banner_dialogue" class="banner_dialogue">
+                <h2>First reset back to AP mode</h2>
+                <p> You are currently in Client mode. Please, first reset the board back to AP mode and try again.</p>
+                <p>Note that this will also clear the saved SSID.</p>
+                <button type="button" name="main_b" class="menu_button warning" onclick="fetch_get('/reset', '', cb_reset, cb_err)">Reset to AP mode</button></li>
+                <button type="button" name="main_b" class="menu_button" onclick="closeDialogue('clientJoin_banner');">Cancel</button></li>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
