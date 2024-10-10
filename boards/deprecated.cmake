@@ -1,12 +1,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
-# This file contains boards in Zephyr which has been replaced with a new board
+# This file contains boards in Zephyr which have been replaced with a new board
 # name.
 # This allows the system to automatically change the board while at the same
 # time prints a warning to the user, that the board name is deprecated.
 #
 # To add a board rename, add a line in following format:
 # set(<old_board_name>_DEPRECATED <new_board_name>)
+#
+# When adding board aliases here, remember to add a mention in the corresponding GitHub issue
+# tracking the removal of API/options
+# https://docs.zephyrproject.org/latest/develop/api/api_lifecycle.html#deprecated,
+# so these aliases are eventually removed
 
 set(96b_carbon_DEPRECATED
     96b_carbon/stm32f401xe
@@ -30,10 +35,10 @@ set(actinius_icarus_som_ns_DEPRECATED
     actinius_icarus_som/nrf9160/ns
 )
 set(adafruit_feather_DEPRECATED
-    adafruit_feather_nrf52840_express
+    adafruit_feather_nrf52840/nrf52840
 )
 set(adafruit_feather_nrf52840_DEPRECATED
-    adafruit_feather_nrf52840_express
+    adafruit_feather_nrf52840/nrf52840
 )
 set(adafruit_itsybitsy_nrf52840_DEPRECATED
     adafruit_itsybitsy
@@ -715,6 +720,9 @@ set(qemu_x86_virt_DEPRECATED
 )
 set(qemu_x86_xip_DEPRECATED
     qemu_x86/atom/xip
+)
+set(qemu_xtensa_DEPRECATED
+    qemu_xtensa/dc233c
 )
 set(qemu_xtensa_mmu_DEPRECATED
     qemu_xtensa/dc233c/mmu

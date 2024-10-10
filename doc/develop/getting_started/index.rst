@@ -132,7 +132,7 @@ The current minimum required version for the main dependencies are:
 
          .. code-block:: bash
 
-            brew install cmake ninja gperf python3 ccache qemu dtc libmagic wget openocd
+            brew install cmake ninja gperf python3 python-tk ccache qemu dtc libmagic wget openocd
 
       #. Add the Homebrew Python folder to the path, in order to be able to
          execute ``python`` and ``pip`` as well ``python3`` and ``pip3``.
@@ -402,7 +402,7 @@ Build the Blinky Sample
 
    :zephyr:code-sample:`blinky` is compatible with most, but not all, :ref:`boards`. If your board
    does not meet Blinky's :ref:`blinky-sample-requirements`, then
-   :ref:`hello_world` is a good alternative.
+   :zephyr:code-sample:`hello_world` is a good alternative.
 
    If you are unsure what name west uses for your board, ``west boards``
    can be used to obtain a list of all boards Zephyr supports.
@@ -478,7 +478,7 @@ Next Steps
 
 Here are some next steps for exploring Zephyr:
 
-* Try other :ref:`samples-and-demos`
+* Try other :zephyr:code-sample-category:`samples`
 * Learn about :ref:`application` and the :ref:`west <west>` tool
 * Find out about west's :ref:`flashing and debugging <west-build-flash-debug>`
   features, or more about :ref:`flashing_and_debugging` in general

@@ -689,11 +689,11 @@ static void rpa_timeout(struct k_work *work)
 	le_rpa_invalidate();
 
 	/* IF no roles using the RPA is running we can stop the RPA timer */
-	if (!(adv_enabled ||
-	      atomic_test_bit(bt_dev.flags, BT_DEV_INITIATING) ||
-	      (atomic_test_bit(bt_dev.flags, BT_DEV_SCANNING) &&
-	       atomic_test_bit(bt_dev.flags, BT_DEV_ACTIVE_SCAN)))) {
-		return;
+	if (IS_ENABLED(CONFIG_BT_CENTRAL)) {
+		if (!(adv_enabled || atomic_test_bit(bt_dev.flags, BT_DEV_INITIATING) ||
+		      bt_le_scan_active_scanner_running())) {
+			return;
+		}
 	}
 
 	le_update_private_addr();
@@ -792,7 +792,7 @@ bool bt_id_adv_random_addr_check(const struct bt_le_adv_param *param)
 		 * Explicitly stop it here.
 		 */
 
-		if (!(param->options & BT_LE_ADV_OPT_CONNECTABLE) &&
+		if (!(param->options & _BT_LE_ADV_OPT_CONNECTABLE) &&
 		     (param->options & BT_LE_ADV_OPT_USE_IDENTITY)) {
 			/* Attempt to set non-connectable NRPA */
 			return false;
@@ -1786,7 +1786,12 @@ int bt_id_set_scan_own_addr(bool active_scan, uint8_t *own_addr_type)
 
 	if (IS_ENABLED(CONFIG_BT_PRIVACY)) {
 		err = bt_id_set_private_addr(BT_ID_DEFAULT);
-		if (err) {
+		if (err == -EACCES && (atomic_test_bit(bt_dev.flags, BT_DEV_SCANNING) ||
+				       atomic_test_bit(bt_dev.flags, BT_DEV_INITIATING))) {
+			LOG_WRN("Set random addr failure ignored in scan/init state");
+
+			return 0;
+		} else if (err) {
 			return err;
 		}
 
@@ -1865,7 +1870,7 @@ int bt_id_set_adv_own_addr(struct bt_le_ext_adv *adv, uint32_t options,
 		return 0;
 	}
 
-	if (options & BT_LE_ADV_OPT_CONNECTABLE) {
+	if (options & _BT_LE_ADV_OPT_CONNECTABLE) {
 		if (dir_adv && (options & BT_LE_ADV_OPT_DIR_ADDR_RPA) &&
 		    !BT_FEAT_LE_PRIVACY(bt_dev.le.features)) {
 			return -ENOTSUP;

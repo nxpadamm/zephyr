@@ -224,15 +224,16 @@ static int eth_nxp_enet_tx(const struct device *dev, struct net_pkt *pkt)
 
 	ret = ENET_SendFrame(data->base, &data->enet_handle, data->tx_frame_buf,
 			     total_len, RING_ID, frame_is_timestamped, pkt);
-	if (ret == kStatus_Success) {
+
+	if (ret != kStatus_Success) {
+		LOG_ERR("ENET_SendFrame error: %d", ret);
+		ENET_ReclaimTxDescriptor(data->base, &data->enet_handle, RING_ID);
+		ret = -EIO;
 		goto exit;
 	}
 
 	if (frame_is_timestamped) {
 		eth_wait_for_ptp_ts(dev, pkt);
-	} else {
-		LOG_ERR("ENET_SendFrame error: %d", ret);
-		ENET_ReclaimTxDescriptor(data->base, &data->enet_handle, RING_ID);
 	}
 
 exit:
@@ -620,8 +621,9 @@ static inline void nxp_enet_unique_mac(uint8_t *mac_addr)
 {
 	uint32_t id = ETH_NXP_ENET_UNIQUE_ID;
 
-	if (id == 0xFFFFFF)
+	if (id == 0xFFFFFF) {
 		LOG_ERR("No unique MAC can be provided in this platform");
+	}
 
 	/* Setting LAA bit because it is not guaranteed universally unique */
 	mac_addr[0] = FREESCALE_OUI_B0 | 0x02;
@@ -853,7 +855,7 @@ static const struct ethernet_api api_funcs = {
 #define NXP_ENET_DT_PHY_DEV(node_id, phy_phandle, idx)						\
 	DEVICE_DT_GET(DT_PHANDLE_BY_IDX(node_id, phy_phandle, idx))
 
-#if DT_NODE_HAS_STATUS(DT_CHOSEN(zephyr_dtcm), okay) && \
+#if DT_NODE_HAS_STATUS_OKAY(DT_CHOSEN(zephyr_dtcm)) && \
 	CONFIG_ETH_NXP_ENET_USE_DTCM_FOR_DMA_BUFFER
 #define _nxp_enet_dma_desc_section __dtcm_bss_section
 #define _nxp_enet_dma_buffer_section __dtcm_noinit_section

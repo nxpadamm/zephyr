@@ -35,7 +35,7 @@
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/kernel.h>
 #include <zephyr/kernel/thread_stack.h>
-#include <zephyr/net/buf.h>
+#include <zephyr/net_buf.h>
 #include <zephyr/shell/shell.h>
 #include <zephyr/shell/shell_string_conv.h>
 #include <zephyr/sys/__assert.h>
@@ -47,7 +47,7 @@
 #include <zephyr/sys/util_macro.h>
 #include <zephyr/sys_clock.h>
 
-#include "shell/bt.h"
+#include "host/shell/bt.h"
 #include "audio.h"
 
 /* Determines if we can initiate streaming */
@@ -619,8 +619,8 @@ static int cmd_select_unicast(const struct shell *sh, size_t argc, char *argv[])
 }
 
 #if defined(CONFIG_BT_BAP_UNICAST_SERVER)
-static const struct bt_audio_codec_qos_pref qos_pref =
-	BT_AUDIO_CODEC_QOS_PREF(true, BT_GAP_LE_PHY_2M, 0u, 60u, 10000u, 60000u, 10000u, 60000u);
+static const struct bt_bap_qos_cfg_pref qos_pref =
+	BT_BAP_QOS_CFG_PREF(true, BT_GAP_LE_PHY_2M, 0u, 60u, 10000u, 60000u, 10000u, 60000u);
 
 static struct bt_bap_stream *stream_alloc(void)
 {
@@ -637,7 +637,7 @@ static struct bt_bap_stream *stream_alloc(void)
 
 static int lc3_config(struct bt_conn *conn, const struct bt_bap_ep *ep, enum bt_audio_dir dir,
 		      const struct bt_audio_codec_cfg *codec_cfg, struct bt_bap_stream **stream,
-		      struct bt_audio_codec_qos_pref *const pref, struct bt_bap_ascs_rsp *rsp)
+		      struct bt_bap_qos_cfg_pref *const pref, struct bt_bap_ascs_rsp *rsp)
 {
 	shell_print(ctx_shell, "ASE Codec Config: conn %p ep %p dir %u", conn, ep, dir);
 
@@ -663,7 +663,7 @@ static int lc3_config(struct bt_conn *conn, const struct bt_bap_ep *ep, enum bt_
 
 static int lc3_reconfig(struct bt_bap_stream *stream, enum bt_audio_dir dir,
 			const struct bt_audio_codec_cfg *codec_cfg,
-			struct bt_audio_codec_qos_pref *const pref, struct bt_bap_ascs_rsp *rsp)
+			struct bt_bap_qos_cfg_pref *const pref, struct bt_bap_ascs_rsp *rsp)
 {
 	shell_print(ctx_shell, "ASE Codec Reconfig: stream %p", stream);
 
@@ -678,7 +678,7 @@ static int lc3_reconfig(struct bt_bap_stream *stream, enum bt_audio_dir dir,
 	return 0;
 }
 
-static int lc3_qos(struct bt_bap_stream *stream, const struct bt_audio_codec_qos *qos,
+static int lc3_qos(struct bt_bap_stream *stream, const struct bt_bap_qos_cfg *qos,
 		   struct bt_bap_ascs_rsp *rsp)
 {
 	shell_print(ctx_shell, "QoS: stream %p %p", stream, qos);
@@ -822,8 +822,8 @@ int bap_ac_create_unicast_group(const struct bap_unicast_ac_param *param,
 		0};
 	struct bt_bap_unicast_group_stream_pair_param pair_params[BAP_UNICAST_AC_MAX_PAIR] = {0};
 	struct bt_bap_unicast_group_param group_param = {0};
-	struct bt_audio_codec_qos *snk_qos[BAP_UNICAST_AC_MAX_SNK];
-	struct bt_audio_codec_qos *src_qos[BAP_UNICAST_AC_MAX_SRC];
+	struct bt_bap_qos_cfg *snk_qos[BAP_UNICAST_AC_MAX_SNK];
+	struct bt_bap_qos_cfg *src_qos[BAP_UNICAST_AC_MAX_SRC];
 	size_t snk_stream_cnt = 0U;
 	size_t src_stream_cnt = 0U;
 	size_t pair_cnt = 0U;
@@ -1316,7 +1316,7 @@ static int cmd_config(const struct shell *sh, size_t argc, char *argv[])
 
 static int cmd_stream_qos(const struct shell *sh, size_t argc, char *argv[])
 {
-	struct bt_audio_codec_qos *qos;
+	struct bt_bap_qos_cfg *qos;
 	unsigned long interval;
 	int err = 0;
 
@@ -1437,19 +1437,14 @@ static int cmd_stream_qos(const struct shell *sh, size_t argc, char *argv[])
 	return 0;
 }
 
-static int create_unicast_group(const struct shell *sh)
+static int set_group_param(
+	const struct shell *sh, struct bt_bap_unicast_group_param *group_param,
+	struct bt_bap_unicast_group_stream_pair_param pair_param[ARRAY_SIZE(unicast_streams)],
+	struct bt_bap_unicast_group_stream_param stream_params[ARRAY_SIZE(unicast_streams)])
 {
-	struct bt_bap_unicast_group_stream_pair_param pair_param[ARRAY_SIZE(unicast_streams)];
-	struct bt_bap_unicast_group_stream_param stream_params[ARRAY_SIZE(unicast_streams)];
-	struct bt_bap_unicast_group_param group_param;
 	size_t source_cnt = 0;
 	size_t sink_cnt = 0;
 	size_t cnt = 0;
-	int err;
-
-	memset(pair_param, 0, sizeof(pair_param));
-	memset(stream_params, 0, sizeof(stream_params));
-	memset(&group_param, 0, sizeof(group_param));
 
 	for (size_t i = 0U; i < ARRAY_SIZE(unicast_streams); i++) {
 		struct bt_bap_stream *stream = bap_stream_from_shell_stream(&unicast_streams[i]);
@@ -1479,16 +1474,50 @@ static int create_unicast_group(const struct shell *sh)
 		return -ENOEXEC;
 	}
 
-	group_param.packing = BT_ISO_PACKING_SEQUENTIAL;
-	group_param.params = pair_param;
-	group_param.params_count = MAX(source_cnt, sink_cnt);
+	group_param->packing = BT_ISO_PACKING_SEQUENTIAL;
+	group_param->params = pair_param;
+	group_param->params_count = MAX(source_cnt, sink_cnt);
 
-	err = bt_bap_unicast_group_create(&group_param,
-					    &default_unicast_group);
+	return 0;
+}
+
+static int create_unicast_group(const struct shell *sh)
+{
+	struct bt_bap_unicast_group_stream_pair_param pair_param[ARRAY_SIZE(unicast_streams)] = {0};
+	struct bt_bap_unicast_group_stream_param stream_params[ARRAY_SIZE(unicast_streams)] = {0};
+	struct bt_bap_unicast_group_param group_param = {0};
+	int err;
+
+	err = set_group_param(sh, &group_param, pair_param, stream_params);
 	if (err != 0) {
-		shell_error(sh,
-			    "Unable to create default unicast group: %d",
-			    err);
+		return err;
+	}
+
+	err = bt_bap_unicast_group_create(&group_param, &default_unicast_group);
+	if (err != 0) {
+		shell_error(sh, "Unable to create default unicast group: %d", err);
+
+		return -ENOEXEC;
+	}
+
+	return 0;
+}
+
+static int reconfig_unicast_group(const struct shell *sh)
+{
+	struct bt_bap_unicast_group_stream_pair_param pair_param[ARRAY_SIZE(unicast_streams)] = {0};
+	struct bt_bap_unicast_group_stream_param stream_params[ARRAY_SIZE(unicast_streams)] = {0};
+	struct bt_bap_unicast_group_param group_param = {0};
+	int err;
+
+	err = set_group_param(sh, &group_param, pair_param, stream_params);
+	if (err != 0) {
+		return err;
+	}
+
+	err = bt_bap_unicast_group_reconfig(default_unicast_group, &group_param);
+	if (err != 0) {
+		shell_error(sh, "Unable to create default unicast group: %d", err);
 
 		return -ENOEXEC;
 	}
@@ -1512,6 +1541,11 @@ static int cmd_qos(const struct shell *sh, size_t argc, char *argv[])
 
 	if (default_unicast_group == NULL) {
 		err = create_unicast_group(sh);
+		if (err != 0) {
+			return err;
+		}
+	} else {
+		err = reconfig_unicast_group(sh);
 		if (err != 0) {
 			return err;
 		}
@@ -3100,7 +3134,7 @@ static void stream_stopped_cb(struct bt_bap_stream *stream, uint8_t reason)
 
 #if defined(CONFIG_BT_BAP_UNICAST)
 static void stream_configured_cb(struct bt_bap_stream *stream,
-				 const struct bt_audio_codec_qos_pref *pref)
+				 const struct bt_bap_qos_cfg_pref *pref)
 {
 	shell_print(ctx_shell, "Stream %p configured\n", stream);
 }
@@ -3609,8 +3643,7 @@ static int cmd_context(const struct shell *sh, size_t argc, char *argv[])
 		return err;
 	}
 
-	if (ctx_val == BT_AUDIO_CONTEXT_TYPE_PROHIBITED ||
-	    ctx_val > BT_AUDIO_CONTEXT_TYPE_ANY) {
+	if (ctx_val > BT_AUDIO_CONTEXT_TYPE_ANY) {
 		shell_error(sh, "Invalid context: %lu", ctx_val);
 
 		return -ENOEXEC;
@@ -3619,6 +3652,12 @@ static int cmd_context(const struct shell *sh, size_t argc, char *argv[])
 	ctx = ctx_val;
 
 	if (!strcmp(argv[3], "supported")) {
+		if (ctx_val == BT_AUDIO_CONTEXT_TYPE_PROHIBITED) {
+			shell_error(sh, "Invalid context: %lu", ctx_val);
+
+			return -ENOEXEC;
+		}
+
 		err = bt_pacs_set_supported_contexts(dir, ctx);
 		if (err) {
 			shell_error(ctx_shell, "Set supported contexts err %d", err);
@@ -3649,7 +3688,47 @@ static int cmd_init(const struct shell *sh, size_t argc, char *argv[])
 		return -ENOEXEC;
 	}
 
+	if (argc != 1 && (IS_ENABLED(CONFIG_BT_BAP_UNICAST_SERVER) && argc != 3)) {
+		shell_error(sh, "Invalid argument count");
+		shell_help(sh);
+
+		return SHELL_CMD_HELP_PRINTED;
+	}
+
 #if defined(CONFIG_BT_BAP_UNICAST_SERVER)
+	unsigned long snk_cnt, src_cnt;
+	struct bt_bap_unicast_server_register_param unicast_server_param = {
+		CONFIG_BT_ASCS_MAX_ASE_SNK_COUNT,
+		CONFIG_BT_ASCS_MAX_ASE_SRC_COUNT
+	};
+
+
+	if (argc == 3) {
+		snk_cnt = shell_strtoul(argv[1], 0, &err);
+		if (snk_cnt > CONFIG_BT_ASCS_MAX_ASE_SNK_COUNT) {
+			shell_error(sh, "Invalid Sink ASE count: %lu. Valid interval: [0, %u]",
+				    snk_cnt, CONFIG_BT_ASCS_MAX_ASE_SNK_COUNT);
+
+			return -ENOEXEC;
+		}
+
+		unicast_server_param.snk_cnt = snk_cnt;
+
+		src_cnt = shell_strtoul(argv[2], 0, &err);
+		if (src_cnt > CONFIG_BT_ASCS_MAX_ASE_SRC_COUNT) {
+			shell_error(sh, "Invalid Source ASE count: %lu. Valid interval: [0, %u]",
+				    src_cnt, CONFIG_BT_ASCS_MAX_ASE_SRC_COUNT);
+
+			return -ENOEXEC;
+		}
+
+		unicast_server_param.src_cnt = src_cnt;
+	} else {
+		snk_cnt = CONFIG_BT_ASCS_MAX_ASE_SNK_COUNT;
+		src_cnt = CONFIG_BT_ASCS_MAX_ASE_SRC_COUNT;
+	}
+
+	bt_bap_unicast_server_register(&unicast_server_param);
 	bt_bap_unicast_server_register_cb(&unicast_server_cb);
 #endif /* CONFIG_BT_BAP_UNICAST_SERVER */
 
@@ -3970,7 +4049,8 @@ static int cmd_print_ase_info(const struct shell *sh, size_t argc, char *argv[])
 	"[bcast_flag]" HELP_SEP "[extended <meta>]" HELP_SEP "[vendor <meta>]]"
 
 SHELL_STATIC_SUBCMD_SET_CREATE(
-	bap_cmds, SHELL_CMD_ARG(init, NULL, NULL, cmd_init, 1, 0),
+	bap_cmds, SHELL_CMD_ARG(init, NULL, NULL, cmd_init, 1,
+				IS_ENABLED(CONFIG_BT_BAP_UNICAST_SERVER) ? 2 : 0),
 #if defined(CONFIG_BT_BAP_BROADCAST_SOURCE)
 	SHELL_CMD_ARG(select_broadcast, NULL, "<stream>", cmd_select_broadcast_source, 2, 0),
 	SHELL_CMD_ARG(create_broadcast, NULL, "[preset <preset_name>] [enc <broadcast_code>]",
@@ -4061,8 +4141,8 @@ static ssize_t connectable_ad_data_add(struct bt_data *data_array,
 		IF_ENABLED(CONFIG_BT_ASCS, (BT_UUID_16_ENCODE(BT_UUID_ASCS_VAL),))
 		IF_ENABLED(CONFIG_BT_BAP_SCAN_DELEGATOR, (BT_UUID_16_ENCODE(BT_UUID_BASS_VAL),))
 		IF_ENABLED(CONFIG_BT_PACS, (BT_UUID_16_ENCODE(BT_UUID_PACS_VAL),))
-		IF_ENABLED(CONFIG_BT_GTBS, (BT_UUID_16_ENCODE(BT_UUID_GTBS_VAL),))
-		IF_ENABLED(CONFIG_BT_TBS, (BT_UUID_16_ENCODE(BT_UUID_TBS_VAL),))
+		IF_ENABLED(CONFIG_BT_TBS, (BT_UUID_16_ENCODE(BT_UUID_GTBS_VAL),))
+		IF_ENABLED(CONFIG_BT_TBS_BEARER_COUNT, (BT_UUID_16_ENCODE(BT_UUID_TBS_VAL),))
 		IF_ENABLED(CONFIG_BT_VCP_VOL_REND, (BT_UUID_16_ENCODE(BT_UUID_VCS_VAL),))
 		IF_ENABLED(CONFIG_BT_HAS, (BT_UUID_16_ENCODE(BT_UUID_HAS_VAL),)) /* Shall be last */
 	};

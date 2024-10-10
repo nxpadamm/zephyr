@@ -175,8 +175,7 @@ static int get_block_ctx(const struct lwm2m_obj_path *path, struct lwm2m_block_c
 	*ctx = NULL;
 
 	for (i = 0; i < NUM_BLOCK1_CONTEXT; i++) {
-		if (memcmp(path, &block1_contexts[i].path,
-			  sizeof(struct lwm2m_obj_path)) == 0) {
+		if (lwm2m_obj_path_equal(path, &block1_contexts[i].path)) {
 			*ctx = &block1_contexts[i];
 			/* refresh timestamp */
 			(*ctx)->timestamp = k_uptime_get();
@@ -2813,7 +2812,7 @@ void lwm2m_udp_receive(struct lwm2m_ctx *client_ctx, uint8_t *buf, uint16_t buf_
 		if (has_block2 && IS_ENABLED(CONFIG_LWM2M_COAP_BLOCK_TRANSFER)) {
 			msg = find_ongoing_block2_tx();
 			if (msg) {
-				return handle_ongoing_block2_tx(msg, &response);
+				handle_ongoing_block2_tx(msg, &response);
 			}
 			return;
 		}
@@ -3325,7 +3324,6 @@ int lwm2m_parse_peerinfo(char *url, struct lwm2m_ctx *client_ctx, bool is_firmwa
 		/** copy url pointer to be used in socket */
 		client_ctx->desthostname = url + off;
 		client_ctx->desthostnamelen = len;
-		client_ctx->hostname_verify = true;
 #endif
 
 #else
@@ -3379,7 +3377,7 @@ int do_composite_read_op_for_parsed_list(struct lwm2m_message *msg, uint16_t con
 	}
 }
 
-#if defined(CONFIG_LWM2M_SERVER_OBJECT_VERSION_1_1)
+#if defined(CONFIG_LWM2M_VERSION_1_1)
 static int do_send_reply_cb(const struct coap_packet *response, struct coap_reply *reply,
 			    const struct sockaddr *from)
 {
@@ -3455,7 +3453,7 @@ static bool init_next_pending_timeseries_data(struct lwm2m_cache_read_info *cach
 int lwm2m_send_cb(struct lwm2m_ctx *ctx, const struct lwm2m_obj_path path_list[],
 			 uint8_t path_list_size, lwm2m_send_cb_t reply_cb)
 {
-#if defined(CONFIG_LWM2M_SERVER_OBJECT_VERSION_1_1)
+#if defined(CONFIG_LWM2M_VERSION_1_1)
 	struct lwm2m_message *msg;
 	int ret;
 	uint16_t content_format;
@@ -3594,7 +3592,7 @@ cleanup:
 	lwm2m_reset_message(msg, true);
 	return ret;
 #else
-	LOG_WRN("LwM2M send is only supported for CONFIG_LWM2M_SERVER_OBJECT_VERSION_1_1");
+	LOG_WRN("LwM2M send is only supported for CONFIG_LWM2M_VERSION_1_1");
 	return -ENOTSUP;
 #endif
 }

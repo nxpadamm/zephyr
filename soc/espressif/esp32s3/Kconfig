@@ -7,17 +7,12 @@ config SOC_SERIES_ESP32S3
 	select ARCH_SUPPORTS_COREDUMP
 	select CLOCK_CONTROL
 	select PINCTRL
-	select XIP if !MCUBOOT
 	select HAS_ESPRESSIF_HAL
 	select CPU_HAS_FPU
 	select HAS_PM
 	select HAS_POWEROFF
 
 if SOC_SERIES_ESP32S3
-
-config IDF_TARGET_ESP32S3
-	bool "ESP32S3 as target SOC"
-	default y
 
 config ESP32S3_APPCPU_IRAM
 	hex "ESP32S3 APPCPU IRAM size"

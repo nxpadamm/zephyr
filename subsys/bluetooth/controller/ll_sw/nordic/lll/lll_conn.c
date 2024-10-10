@@ -59,6 +59,7 @@ static struct pdu_data *get_last_tx_pdu(struct lll_conn *lll);
 
 static uint8_t crc_expire;
 static uint8_t crc_valid;
+static uint8_t is_aborted;
 static uint16_t trx_cnt;
 
 #if defined(CONFIG_BT_CTLR_LE_ENC)
@@ -142,10 +143,23 @@ void lll_conn_prepare_reset(void)
 	trx_cnt = 0U;
 	crc_valid = 0U;
 	crc_expire = 0U;
+	is_aborted = 0U;
 
 #if defined(CONFIG_BT_CTLR_LE_ENC)
 	mic_state = LLL_CONN_MIC_NONE;
 #endif /* CONFIG_BT_CTLR_LE_ENC */
+}
+
+int lll_conn_is_abort_cb(void *next, void *curr, lll_prepare_cb_t *resume_cb)
+{
+	struct lll_conn *lll = curr;
+
+	/* Do not abort if near supervision timeout */
+	if (lll->forced) {
+		return 0;
+	}
+
+	return -ECANCELED;
 }
 
 void lll_conn_abort_cb(struct lll_prepare_param *prepare_param, void *param)
@@ -156,6 +170,17 @@ void lll_conn_abort_cb(struct lll_prepare_param *prepare_param, void *param)
 
 	/* NOTE: This is not a prepare being cancelled */
 	if (!prepare_param) {
+		/* Get reference to LLL connection context */
+		lll = param;
+
+		/* For a peripheral role, ensure at least one PDU is tx-ed
+		 * back to central, otherwise let the supervision timeout
+		 * countdown be started.
+		 */
+		if ((lll->role == BT_HCI_ROLE_PERIPHERAL) && (trx_cnt <= 1U)) {
+			is_aborted = 1U;
+		}
+
 		/* Perform event abort here.
 		 * After event has been cleanly aborted, clean up resources
 		 * and dispatch event done.
@@ -171,9 +196,26 @@ void lll_conn_abort_cb(struct lll_prepare_param *prepare_param, void *param)
 	err = lll_hfclock_off();
 	LL_ASSERT(err >= 0);
 
-	/* Accumulate the latency as event is aborted while being in pipeline */
+	/* Get reference to LLL connection context */
 	lll = prepare_param->param;
-	lll->latency_prepare += (prepare_param->lazy + 1);
+
+	/* Accumulate the latency as event is aborted while being in pipeline */
+	lll->lazy_prepare = prepare_param->lazy;
+	lll->latency_prepare += (lll->lazy_prepare + 1U);
+
+#if defined(CONFIG_BT_PERIPHERAL)
+	if (lll->role == BT_HCI_ROLE_PERIPHERAL) {
+		/* Accumulate window widening */
+		lll->periph.window_widening_prepare_us +=
+		    lll->periph.window_widening_periodic_us *
+		    (prepare_param->lazy + 1);
+		if (lll->periph.window_widening_prepare_us >
+		    lll->periph.window_widening_max_us) {
+			lll->periph.window_widening_prepare_us =
+				lll->periph.window_widening_max_us;
+		}
+	}
+#endif /* CONFIG_BT_PERIPHERAL */
 
 	/* Extra done event, to check supervision timeout */
 	e = ull_event_done_extra_get();
@@ -396,7 +438,12 @@ void lll_conn_isr_rx(void *param)
 #endif /* HAL_RADIO_GPIO_HAVE_PA_PIN */
 
 	/* assert if radio packet ptr is not set and radio started tx */
-	LL_ASSERT(!radio_is_ready());
+	if (IS_ENABLED(CONFIG_BT_CTLR_PROFILE_ISR)) {
+		LL_ASSERT_MSG(!radio_is_address(), "%s: Radio ISR latency: %u", __func__,
+			      lll_prof_latency_get());
+	} else {
+		LL_ASSERT(!radio_is_address());
+	}
 
 lll_conn_isr_rx_exit:
 	/* Save the AA captured for the first Rx in connection event */
@@ -497,6 +544,10 @@ void lll_conn_isr_tx(void *param)
 	struct lll_conn *lll;
 	uint32_t hcto;
 
+	if (IS_ENABLED(CONFIG_BT_CTLR_PROFILE_ISR)) {
+		lll_prof_latency_capture();
+	}
+
 	/* Clear radio tx status and events */
 	lll_isr_tx_status_reset();
 
@@ -566,7 +617,12 @@ void lll_conn_isr_tx(void *param)
 	lll_conn_rx_pkt_set(lll);
 
 	/* assert if radio packet ptr is not set and radio started rx */
-	LL_ASSERT(!radio_is_ready());
+	if (IS_ENABLED(CONFIG_BT_CTLR_PROFILE_ISR)) {
+		LL_ASSERT_MSG(!radio_is_address(), "%s: Radio ISR latency: %u", __func__,
+			      lll_prof_latency_get());
+	} else {
+		LL_ASSERT(!radio_is_address());
+	}
 
 #if defined(CONFIG_BT_CTLR_DF_CONN_CTE_TX)
 	pdu_tx = get_last_tx_pdu(lll);
@@ -637,12 +693,22 @@ void lll_conn_isr_tx(void *param)
 
 void lll_conn_rx_pkt_set(struct lll_conn *lll)
 {
+	struct pdu_data *pdu_data_rx;
 	struct node_rx_pdu *node_rx;
 	uint16_t max_rx_octets;
 	uint8_t phy;
 
 	node_rx = ull_pdu_rx_alloc_peek(1);
 	LL_ASSERT(node_rx);
+
+	/* In case of ISR latencies, if packet pointer has not been set on time
+	 * then we do not want to check uninitialized length in rx buffer that
+	 * did not get used by Radio DMA. This would help us in detecting radio
+	 * ready event being set? We can not detect radio ready if it happens
+	 * twice before Radio ISR executes after latency.
+	 */
+	pdu_data_rx = (void *)node_rx->pdu;
+	pdu_data_rx->len = 0U;
 
 #if defined(CONFIG_BT_CTLR_DATA_LENGTH)
 	max_rx_octets = lll->dle.eff.max_rx_octets;
@@ -680,7 +746,7 @@ void lll_conn_rx_pkt_set(struct lll_conn *lll)
 #error "Undefined HAL_RADIO_PDU_LEN_MAX."
 #else
 		radio_pkt_rx_set(radio_ccm_rx_pkt_set(&lll->ccm_rx, phy,
-						      node_rx->pdu));
+						      pdu_data_rx));
 #endif
 #endif /* CONFIG_BT_CTLR_LE_ENC */
 	} else {
@@ -688,7 +754,7 @@ void lll_conn_rx_pkt_set(struct lll_conn *lll)
 				    RADIO_PKT_CONF_FLAGS(RADIO_PKT_CONF_PDU_TYPE_DC, phy,
 							 RADIO_PKT_CONF_CTE_DISABLED));
 
-		radio_pkt_rx_set(node_rx->pdu);
+		radio_pkt_rx_set(pdu_data_rx);
 	}
 }
 
@@ -843,6 +909,7 @@ static void isr_done(void *param)
 	e->type = EVENT_DONE_EXTRA_TYPE_CONN;
 	e->trx_cnt = trx_cnt;
 	e->crc_valid = crc_valid;
+	e->is_aborted = is_aborted;
 
 #if defined(CONFIG_BT_CTLR_LE_ENC)
 	e->mic_state = mic_state;

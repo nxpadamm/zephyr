@@ -557,8 +557,8 @@ static int adin2111_read_fifo(const struct device *dev, const uint16_t port_idx)
 
 	/* burst read must be in multiples of 4 */
 	padding_len = ((fsize % 4) == 0) ? 0U : (ROUND_UP(fsize, 4U) - fsize);
-	/* actual frame length is FSIZE - FRAME HEADER - CRC32 */
-	fsize_real = fsize - (ADIN2111_FRAME_HEADER_SIZE + sizeof(uint32_t));
+	/* actual available frame length is FSIZE - FRAME HEADER */
+	fsize -= ADIN2111_FRAME_HEADER_SIZE;
 
 	/* spi header */
 	*(uint16_t *)cmd_buf = htons((ADIN2111_READ_TXN_CTRL | rx_reg));
@@ -574,7 +574,7 @@ static int adin2111_read_fifo(const struct device *dev, const uint16_t port_idx)
 	const struct spi_buf tx_buf = { .buf = cmd_buf, .len = sizeof(cmd_buf) };
 	const struct spi_buf rx_buf[3] = {
 		{.buf = NULL, .len = sizeof(cmd_buf) + ADIN2111_FRAME_HEADER_SIZE},
-		{.buf = ctx->buf, .len = fsize_real},
+		{.buf = ctx->buf, .len = fsize},
 		{.buf = NULL, .len = padding_len }
 	};
 	const struct spi_buf_set tx = { .buffers = &tx_buf, .count = 1U };
@@ -589,6 +589,9 @@ static int adin2111_read_fifo(const struct device *dev, const uint16_t port_idx)
 		LOG_ERR("Port %u failed to read RX FIFO, %d", port_idx, ret);
 		return ret;
 	}
+
+	/* remove CRC32 and pass to the stack */
+	fsize_real = fsize - sizeof(uint32_t);
 
 	pkt = net_pkt_rx_alloc_with_buffer(iface, fsize_real, AF_UNSPEC, 0,
 					   K_MSEC(CONFIG_ETH_ADIN2111_TIMEOUT));
@@ -1061,8 +1064,9 @@ static int eth_adin2111_find_filter(const struct device *dev, uint8_t *mac, cons
 		}
 		if ((reg & UINT16_MAX) == sys_get_be16(&mac[0])) {
 			if ((port_idx == 0 && !(reg & ADIN2111_ADDR_APPLY2PORT1)) ||
-			    (port_idx == 1 && !(reg & ADIN2111_ADDR_APPLY2PORT2)))
+			    (port_idx == 1 && !(reg & ADIN2111_ADDR_APPLY2PORT2))) {
 				continue;
+			}
 
 			ret = eth_adin2111_reg_read(dev, ADIN2111_ADDR_FILT_LWR + offset, &reg);
 			if (ret < 0) {

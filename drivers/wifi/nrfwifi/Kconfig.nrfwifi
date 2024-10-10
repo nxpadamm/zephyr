@@ -78,6 +78,10 @@ config NRF70_SYSTEM_WITH_RAW_MODES
 
 endchoice
 
+config NRF70_SYSTEM_MODE_COMMON
+	bool
+	default y if NRF70_SYSTEM_MODE || NRF70_SYSTEM_WITH_RAW_MODES
+
 config NET_L2_ETHERNET
 	default y if !NRF70_RADIO_TEST
 
@@ -127,13 +131,10 @@ config NRF_WIFI_IF_AUTO_START
 config NRF_WIFI_PATCHES_BUILTIN
 	bool "Store nRF70 FW patches as part of the driver"
 	default y
+	depends on !NRF_WIFI_BUILD_ONLY_MODE
 	help
 	  Select this option to store nRF70 FW patches as part of the driver.
 	  This option impacts the code memory footprint of the driver.
-
-config CUSTOM_LINKER_SCRIPT
-	string "Custom linker script for nRF70 FW patches"
-	default "${ZEPHYR_BASE}/../nrf/drivers/wifi/nrf70/rpu_fw_patches.ld"
 
 config NRF_WIFI_LOW_POWER
 	bool "low power mode in nRF Wi-Fi chipsets"
@@ -495,8 +496,8 @@ config WIFI_FIXED_MAC_ADDRESS
 
 choice
 	prompt "Wi-Fi MAC address type"
-	default WIFI_OTP_MAC_ADDRESS if WIFI_FIXED_MAC_ADDRESS = ""
 	default WIFI_FIXED_MAC_ADDRESS_ENABLED if WIFI_FIXED_MAC_ADDRESS != ""
+	default WIFI_OTP_MAC_ADDRESS
 	help
 	  Select the type of MAC address to be used by the Wi-Fi driver
 
@@ -660,11 +661,40 @@ config NET_MGMT_EVENT_QUEUE_SIZE
 	default 16
 endif # NRF_WIFI_RPU_RECOVERY
 
-config NRF_WIFI_COMBINED_BUCKEN_IOVDD_GPIO
-	bool
+config NRF_WIFI_FEAT_WMM
+	bool "WMM/QoS support"
+	default y
 	help
-	  Enable this option to use a single GPIO to control both buck enable and IOVDD enable,
-	  there will be a internal hardware switch to add delay between the two operations. This
-	  is typically 4ms delay for nRF70.
+	  This option controls disable/enable of the WMM(Wireless Multi-Media) feature.
+
+choice NRF_WIFI_PS_DATA_RETRIEVAL_MECHANISM
+	prompt "Power save data retrieval mechanism"
+	default NRF_WIFI_PS_POLL_BASED_RETRIEVAL
+	help
+	  Select the mechanism to retrieve buffered data from AP.
+
+config NRF_WIFI_PS_POLL_BASED_RETRIEVAL
+	bool "PS-Poll frame based mechanism to retrieve buffered data from AP"
+	help
+	  When AP notifies about availability of buffered data, the STA stays in power save
+	  and retrieves the frames one-by-one, this conserved more power but adds latency
+	  to the traffic. Ideal for minimum number of frames.
+
+config NRF_WIFI_QOS_NULL_BASED_RETRIEVAL
+	bool "QoS null frame based mechanism to retrieve buffered data from AP"
+	help
+	  When AP notifies about availability of buffered data, the STA comes out of
+	  power save and then AP can deliver all buffered frames without any additional
+	  overhead or latency, but STA enters power save after a delay costing more power
+	  depending on the delay. Ideal for heavy buffered traffic.
+
+endchoice
+
+config NRF_WIFI_BUILD_ONLY_MODE
+	bool "Build only mode"
+	help
+	  Enable this option to build the driver without firmware loading, removes
+	  dependency on firmware binary and patches.
+	  This is useful to check the build and link errors.
 
 endif # WIFI_NRF70

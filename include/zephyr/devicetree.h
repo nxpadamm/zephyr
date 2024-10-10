@@ -524,6 +524,92 @@
 #define DT_NODE_FULL_NAME(node_id) DT_CAT(node_id, _FULL_NAME)
 
 /**
+ * @brief Get the node's full name, including the unit-address, as an unquoted
+ *        sequence of tokens
+ *
+ * This macro returns removed "the quotes" from the node's full name.
+ *
+ * Example devicetree fragment:
+ *
+ * @code{.dts}
+ *     / {
+ *             soc {
+ *                     node: my-node@12345678 { ... };
+ *             };
+ *     };
+ * @endcode
+ *
+ * Example usage:
+ *
+ * @code{.c}
+ *    DT_NODE_FULL_NAME_UNQUOTED(DT_NODELABEL(node)) // my-node@12345678
+ * @endcode
+ *
+ * @param node_id node identifier
+ * @return the node's full name with unit-address as a sequence of tokens,
+ *         with no quotes
+ */
+#define DT_NODE_FULL_NAME_UNQUOTED(node_id) DT_CAT(node_id, _FULL_NAME_UNQUOTED)
+
+/**
+ * @brief Get the node's full name, including the unit-address, as a token.
+ *
+ * This macro returns removed "the quotes" from the node's full name and
+ * converting any non-alphanumeric characters to underscores.
+ *
+ * Example devicetree fragment:
+ *
+ * @code{.dts}
+ *     / {
+ *             soc {
+ *                     node: my-node@12345678 { ... };
+ *             };
+ *     };
+ * @endcode
+ *
+ * Example usage:
+ *
+ * @code{.c}
+ *    DT_NODE_FULL_NAME_TOKEN(DT_NODELABEL(node)) // my_node_12345678
+ * @endcode
+ *
+ * @param node_id node identifier
+ * @return the node's full name with unit-address as a token, i.e. without any quotes
+ *         and with special characters converted to underscores
+ */
+#define DT_NODE_FULL_NAME_TOKEN(node_id) DT_CAT(node_id, _FULL_NAME_TOKEN)
+
+/**
+ * @brief Like DT_NODE_FULL_NAME_TOKEN(), but uppercased.
+ *
+ * This macro returns removed "the quotes" from the node's full name,
+ * converting any non-alphanumeric characters to underscores, and
+ * capitalizing the result.
+ *
+ * Example devicetree fragment:
+ *
+ * @code{.dts}
+ *     / {
+ *             soc {
+ *                     node: my-node@12345678 { ... };
+ *             };
+ *     };
+ * @endcode
+ *
+ * Example usage:
+ *
+ * @code{.c}
+ *    DT_NODE_FULL_NAME_UPPER_TOKEN(DT_NODELABEL(node)) // MY_NODE_12345678
+ * @endcode
+ *
+ * @param node_id node identifier
+ * @return the node's full name with unit-address as an uppercased token,
+ *         i.e. without any quotes and with special characters converted
+ *         to underscores
+ */
+#define DT_NODE_FULL_NAME_UPPER_TOKEN(node_id) DT_CAT(node_id, _FULL_NAME_UPPER_TOKEN)
+
+/**
  * @brief Get a devicetree node's index into its parent's list of children
  *
  * Indexes are zero-based.
@@ -2244,13 +2330,41 @@
 	IS_ENABLED(DT_CAT4(node_id, _REG_NAME_, name, _EXISTS))
 
 /**
+ * @brief Get the base raw address of the register block at index @p idx
+ *
+ * Get the base address of the register block at index @p idx without any
+ * type suffix. This can be used to index other devicetree properties, use the
+ * non _RAW macros for assigning values in actual code.
+ *
+ * @param node_id node identifier
+ * @param idx index of the register whose address to return
+ * @return address of the idx-th register block
+ */
+#define DT_REG_ADDR_BY_IDX_RAW(node_id, idx) \
+	DT_CAT4(node_id, _REG_IDX_, idx, _VAL_ADDRESS)
+
+/**
+ * @brief Get a node's (only) register block raw address
+ *
+ * Get a node's only register block address without any type suffix. This can
+ * be used to index other devicetree properties, use the non _RAW macros for
+ * assigning values in actual code.
+ *
+ * Equivalent to DT_REG_ADDR_BY_IDX_RAW(node_id, 0).
+ * @param node_id node identifier
+ * @return node's register block address
+ */
+#define DT_REG_ADDR_RAW(node_id) \
+	DT_REG_ADDR_BY_IDX_RAW(node_id, 0)
+
+/**
  * @brief Get the base address of the register block at index @p idx
  * @param node_id node identifier
  * @param idx index of the register whose address to return
  * @return address of the idx-th register block
  */
 #define DT_REG_ADDR_BY_IDX(node_id, idx) \
-	DT_CAT4(node_id, _REG_IDX_, idx, _VAL_ADDRESS)
+	DT_U32_C(DT_REG_ADDR_BY_IDX_RAW(node_id, idx))
 
 /**
  * @brief Get the size of the register block at index @p idx
@@ -2264,7 +2378,7 @@
  * @return size of the idx-th register block
  */
 #define DT_REG_SIZE_BY_IDX(node_id, idx) \
-	DT_CAT4(node_id, _REG_IDX_, idx, _VAL_SIZE)
+	DT_U32_C(DT_CAT4(node_id, _REG_IDX_, idx, _VAL_SIZE))
 
 /**
  * @brief Get a node's (only) register block address
@@ -2285,7 +2399,7 @@
  * @param node_id node identifier
  * @return node's register block address
  */
-#define DT_REG_ADDR_U64(node_id) DT_U64_C(DT_REG_ADDR(node_id))
+#define DT_REG_ADDR_U64(node_id) DT_U64_C(DT_REG_ADDR_BY_IDX_RAW(node_id, 0))
 
 /**
  * @brief Get a node's (only) register block size
@@ -2303,7 +2417,7 @@
  * @return address of the register block specified by name
  */
 #define DT_REG_ADDR_BY_NAME(node_id, name) \
-	DT_CAT4(node_id, _REG_NAME_, name, _VAL_ADDRESS)
+	DT_U32_C(DT_CAT4(node_id, _REG_NAME_, name, _VAL_ADDRESS))
 
 /**
  * @brief Like DT_REG_ADDR_BY_NAME(), but with a fallback to @p default_value
@@ -2330,7 +2444,7 @@
  * @return address of the register block specified by name
  */
 #define DT_REG_ADDR_BY_NAME_U64(node_id, name) \
-	DT_U64_C(DT_REG_ADDR_BY_NAME(node_id, name))
+	DT_U64_C(DT_CAT4(node_id, _REG_NAME_, name, _VAL_ADDRESS))
 
 /**
  * @brief Get a register block's size by name
@@ -2339,7 +2453,7 @@
  * @return size of the register block specified by name
  */
 #define DT_REG_SIZE_BY_NAME(node_id, name) \
-	DT_CAT4(node_id, _REG_NAME_, name, _VAL_SIZE)
+	DT_U32_C(DT_CAT4(node_id, _REG_NAME_, name, _VAL_SIZE))
 
 /**
  * @brief Like DT_REG_SIZE_BY_NAME(), but with a fallback to @p default_value
@@ -3201,7 +3315,7 @@
  */
 #define DT_FOREACH_STATUS_OKAY(compat, fn)				\
 	COND_CODE_1(DT_HAS_COMPAT_STATUS_OKAY(compat),			\
-		    (DT_CAT(DT_FOREACH_OKAY_, compat)(fn)),	\
+		    (UTIL_CAT(DT_FOREACH_OKAY_, compat)(fn)),		\
 		    ())
 
 /**
@@ -3253,6 +3367,25 @@
 		    (DT_CAT(DT_FOREACH_OKAY_VARGS_,			\
 			      compat)(fn, __VA_ARGS__)),		\
 		    ())
+
+/**
+ * @brief Call @p fn on all nodes with compatible `compat`
+ *        and status `okay` with multiple arguments
+ *
+ *
+ * @param compat lowercase-and-underscores devicetree compatible
+ * @param fn Macro to call for each enabled node. Must accept a
+ *           devicetree compatible and instance number.
+ * @param ... Additional arguments to pass to @p fn
+ *
+ * @see DT_INST_FOREACH_STATUS_OKAY_VARGS
+ */
+#define DT_COMPAT_FOREACH_STATUS_OKAY_VARGS(compat, fn, ...)		\
+	COND_CODE_1(DT_HAS_COMPAT_STATUS_OKAY(compat),			\
+		    (UTIL_CAT(DT_FOREACH_OKAY_INST_VARGS_,		\
+			      compat)(fn, compat, __VA_ARGS__)),	\
+		    ())
+
 
 /**
  * @brief Invokes @p fn for each node label of a given node
@@ -3383,6 +3516,28 @@
  */
 #define DT_NODE_HAS_STATUS(node_id, status) \
 	DT_NODE_HAS_STATUS_INTERNAL(node_id, status)
+
+/**
+ * @brief Does a node identifier refer to a node with a status `okay`?
+ *
+ * Example uses:
+ *
+ * @code{.c}
+ *     DT_NODE_HAS_STATUS_OKAY(DT_PATH(soc, i2c_12340000))
+ * @endcode
+ *
+ * Tests whether a node identifier refers to a node which:
+ *
+ * - exists in the devicetree, and
+ * - has a status property as `okay`
+ *
+ * As usual, both a missing status and an `ok` status are treated as
+ * `okay`.
+ *
+ * @param node_id a node identifier
+ * @return 1 if the node has status as `okay`, 0 otherwise.
+ */
+#define DT_NODE_HAS_STATUS_OKAY(node_id) DT_NODE_HAS_STATUS(node_id, okay)
 
 /**
  * @brief Does the devicetree have a status `okay` node with a compatible?
@@ -4117,6 +4272,14 @@
 #define DT_INST_REG_HAS_NAME(inst, name) DT_REG_HAS_NAME(DT_DRV_INST(inst), name)
 
 /**
+ * @brief Get a `DT_DRV_COMPAT` instance's idx-th register block's raw address
+ * @param inst instance number
+ * @param idx index of the register whose address to return
+ * @return address of the instance's idx-th register block
+ */
+#define DT_INST_REG_ADDR_BY_IDX_RAW(inst, idx) DT_REG_ADDR_BY_IDX_RAW(DT_DRV_INST(inst), idx)
+
+/**
  * @brief Get a `DT_DRV_COMPAT` instance's idx-th register block's address
  * @param inst instance number
  * @param idx index of the register whose address to return
@@ -4166,7 +4329,7 @@
  * @return address of the register block with the given @p name
  */
 #define DT_INST_REG_ADDR_BY_NAME_U64(inst, name) \
-	DT_U64_C(DT_INST_REG_ADDR_BY_NAME(inst, name))
+	DT_REG_ADDR_BY_NAME_U64(DT_DRV_INST(inst), name)
 
 /**
  * @brief Get a `DT_DRV_COMPAT`'s register block size by name
@@ -4189,6 +4352,13 @@
 	DT_REG_SIZE_BY_NAME_OR(DT_DRV_INST(inst), name, default_value)
 
 /**
+ * @brief Get a `DT_DRV_COMPAT`'s (only) register block raw address
+ * @param inst instance number
+ * @return instance's register block address
+ */
+#define DT_INST_REG_ADDR_RAW(inst) DT_INST_REG_ADDR_BY_IDX_RAW(inst, 0)
+
+/**
  * @brief Get a `DT_DRV_COMPAT`'s (only) register block address
  * @param inst instance number
  * @return instance's register block address
@@ -4206,7 +4376,7 @@
  * @param inst instance number
  * @return instance's register block address
  */
-#define DT_INST_REG_ADDR_U64(inst) DT_U64_C(DT_INST_REG_ADDR(inst))
+#define DT_INST_REG_ADDR_U64(inst) DT_REG_ADDR_U64(DT_DRV_INST(inst))
 
 /**
  * @brief Get a `DT_DRV_COMPAT`'s (only) register block size
@@ -4214,6 +4384,14 @@
  * @return instance's register block size
  */
 #define DT_INST_REG_SIZE(inst) DT_INST_REG_SIZE_BY_IDX(inst, 0)
+
+/**
+ * @brief Get a `DT_DRV_COMPAT`'s number of interrupts
+ *
+ * @param inst instance number
+ * @return number of interrupts
+ */
+#define DT_INST_NUM_IRQS(inst) DT_NUM_IRQS(DT_DRV_INST(inst))
 
 /**
  * @brief Get a `DT_DRV_COMPAT` interrupt level
@@ -4460,6 +4638,53 @@
 	COND_CODE_1(IS_EMPTY(DT_ANY_INST_HAS_PROP_STATUS_OKAY_(prop)), (0), (1))
 
 /**
+ * @brief Check if any device node with status `okay` has a given
+ *        property.
+ *
+ * @param compat lowercase-and-underscores devicetree compatible
+ * @param prop lowercase-and-underscores property name
+ *
+ * Example devicetree overlay:
+ *
+ * @code{.dts}
+ *     &i2c0 {
+ *         sensor0: sensor@0 {
+ *             compatible = "vnd,some-sensor";
+ *             status = "okay";
+ *             reg = <0>;
+ *             foo = <1>;
+ *             bar = <2>;
+ *         };
+ *
+ *         sensor1: sensor@1 {
+ *             compatible = "vnd,some-sensor";
+ *             status = "okay";
+ *             reg = <1>;
+ *             foo = <2>;
+ *         };
+ *
+ *         sensor2: sensor@2 {
+ *             compatible = "vnd,some-sensor";
+ *             status = "disabled";
+ *             reg = <2>;
+ *             baz = <1>;
+ *         };
+ *     };
+ * @endcode
+ *
+ * Example usage:
+ *
+ * @code{.c}
+ *
+ *     DT_ANY_COMPAT_HAS_PROP_STATUS_OKAY(vnd_some_sensor, foo) // 1
+ *     DT_ANY_COMPAT_HAS_PROP_STATUS_OKAY(vnd_some_sensor, bar) // 1
+ *     DT_ANY_COMPAT_HAS_PROP_STATUS_OKAY(vnd_some_sensor, baz) // 0
+ * @endcode
+ */
+#define DT_ANY_COMPAT_HAS_PROP_STATUS_OKAY(compat, prop) \
+	(DT_COMPAT_FOREACH_STATUS_OKAY_VARGS(compat, DT_COMPAT_NODE_HAS_PROP_AND_OR, prop) 0)
+
+/**
  * @brief Call @p fn on all nodes with compatible `DT_DRV_COMPAT`
  *        and status `okay`
  *
@@ -4536,15 +4761,16 @@
  *
  *
  * @param fn Macro to call for each enabled node. Must accept an
- *           instance number as its only parameter.
+ *           instance number.
  * @param ... variable number of arguments to pass to @p fn
  *
  * @see DT_INST_FOREACH_STATUS_OKAY
+ * @see DT_COMPAT_FOREACH_STATUS_OKAY_VARGS
  */
 #define DT_INST_FOREACH_STATUS_OKAY_VARGS(fn, ...) \
-	COND_CODE_1(DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT),	\
-		    (UTIL_CAT(DT_FOREACH_OKAY_INST_VARGS_,	\
-			      DT_DRV_COMPAT)(fn, __VA_ARGS__)),	\
+	COND_CODE_1(DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT),   \
+		    (UTIL_CAT(DT_FOREACH_OKAY_INST_VARGS_,      \
+			      DT_DRV_COMPAT)(fn, __VA_ARGS__)), \
 		    ())
 
 /**
@@ -4805,6 +5031,22 @@
 /** @brief Helper for DT_NODE_HAS_STATUS */
 #define DT_NODE_HAS_STATUS_INTERNAL(node_id, status) \
 	IS_ENABLED(DT_CAT3(node_id, _STATUS_, status))
+
+/** @brief Helper macro to OR multiple has property checks in a loop macro
+ *         (for the specified device)
+ */
+#define DT_COMPAT_NODE_HAS_PROP_AND_OR(inst, compat, prop) \
+	DT_NODE_HAS_PROP(DT_INST(inst, compat), prop) ||
+
+/**
+ * @def DT_U32_C
+ * @brief Macro to add 32bit unsigned postfix to the devicetree address constants
+ */
+#if defined(_LINKER) || defined(_ASMLANGUAGE)
+#define DT_U32_C(_v) (_v)
+#else
+#define DT_U32_C(_v) UINT32_C(_v)
+#endif
 
 /**
  * @def DT_U64_C

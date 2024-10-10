@@ -7,7 +7,7 @@
 
 #include <renesas/ra/ra8/r7fa8m1ahecbd.dtsi>
 #include <dt-bindings/gpio/gpio.h>
-
+#include <zephyr/dt-bindings/adc/adc.h>
 #include "ek_ra8m1-pinctrl.dtsi"
 
 / {
@@ -16,9 +16,11 @@
 
 	chosen {
 		zephyr,sram = &sram0;
+		zephyr,flash-controller = &flash1;
 		zephyr,flash = &flash0;
 		zephyr,console = &uart9;
 		zephyr,shell-uart = &uart9;
+		zephyr,entropy = &trng;
 	};
 
 	leds {
@@ -77,21 +79,21 @@
 };
 
 &pll {
-	source = <RA_PLL_SOURCE_MAIN_OSC>;
-	div = <RA_PLL_DIV_2>;
+	clocks = <&xtal>;
+	div = <2>;
 	mul = <96 0>;
-	divp = <RA_PLL_DIV_2>;
+	divp = <2>;
 	freqp = <DT_FREQ_M(480)>;
-	divq = <RA_PLL_DIV_2>;
+	divq = <2>;
 	freqq = <DT_FREQ_M(480)>;
-	divr = <RA_PLL_DIV_2>;
+	divr = <2>;
 	freqr = <DT_FREQ_M(480)>;
 	status = "okay";
 };
 
 &sciclk {
-	clk_src = <RA_CLOCK_SOURCE_PLL1P>;
-	clk_div = <RA_SCI_CLOCK_DIV_4>;
+	clocks = <&pll>;
+	div = <4>;
 	status = "okay";
 };
 
@@ -144,3 +146,40 @@
 };
 
 mikrobus_serial: &uart3 {};
+
+&iic1 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	clock-frequency = <DT_FREQ_M(1)>;
+	pinctrl-0 = <&iic1_default>;
+	pinctrl-names = "default";
+};
+
+&adc0 {
+	status = "okay";
+	pinctrl-0 = <&adc0_default>;
+	pinctrl-names = "default";
+};
+
+&trng {
+	status = "okay";
+};
+
+&spi1 {
+	pinctrl-0 = <&spi1_default>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&flash1 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		storage_partition: partition@0 {
+			label = "storage";
+			reg = <0X0 DT_SIZE_K(12)>;
+		};
+	};
+};

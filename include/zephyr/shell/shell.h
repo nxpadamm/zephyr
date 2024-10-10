@@ -191,7 +191,7 @@ typedef int (*shell_dict_cmd_handler)(const struct shell *sh, size_t argc,
 				      char **argv, void *data);
 
 /* When entries are added to the memory section a padding is applied for
- * native_posix_64 and x86_64 targets. Adding padding to allow handle data
+ * the posix architecture with 64bits builds and x86_64 targets. Adding padding to allow handle data
  * in the memory section as array.
  */
 #if (defined(CONFIG_ARCH_POSIX) && defined(CONFIG_64BIT)) || defined(CONFIG_X86_64)
@@ -1093,8 +1093,8 @@ void shell_hexdump(const struct shell *sh, const uint8_t *data, size_t len);
  * @param[in] ... List of parameters to print.
  */
 #define shell_info(_sh, _ft, ...) \
-	shell_info_impl(_sh, _ft "\n", ##__VA_ARGS__)
-void __printf_like(2, 3) shell_info_impl(const struct shell *sh, const char *fmt, ...);
+	shell_fprintf_info(_sh, _ft "\n", ##__VA_ARGS__)
+void __printf_like(2, 3) shell_fprintf_info(const struct shell *sh, const char *fmt, ...);
 
 /**
  * @brief Print normal message to the shell.
@@ -1106,8 +1106,8 @@ void __printf_like(2, 3) shell_info_impl(const struct shell *sh, const char *fmt
  * @param[in] ... List of parameters to print.
  */
 #define shell_print(_sh, _ft, ...) \
-	shell_print_impl(_sh, _ft "\n", ##__VA_ARGS__)
-void __printf_like(2, 3) shell_print_impl(const struct shell *sh, const char *fmt, ...);
+	shell_fprintf_normal(_sh, _ft "\n", ##__VA_ARGS__)
+void __printf_like(2, 3) shell_fprintf_normal(const struct shell *sh, const char *fmt, ...);
 
 /**
  * @brief Print warning message to the shell.
@@ -1119,8 +1119,8 @@ void __printf_like(2, 3) shell_print_impl(const struct shell *sh, const char *fm
  * @param[in] ... List of parameters to print.
  */
 #define shell_warn(_sh, _ft, ...) \
-	shell_warn_impl(_sh, _ft "\n", ##__VA_ARGS__)
-void __printf_like(2, 3) shell_warn_impl(const struct shell *sh, const char *fmt, ...);
+	shell_fprintf_warn(_sh, _ft "\n", ##__VA_ARGS__)
+void __printf_like(2, 3) shell_fprintf_warn(const struct shell *sh, const char *fmt, ...);
 
 /**
  * @brief Print error message to the shell.
@@ -1132,8 +1132,8 @@ void __printf_like(2, 3) shell_warn_impl(const struct shell *sh, const char *fmt
  * @param[in] ... List of parameters to print.
  */
 #define shell_error(_sh, _ft, ...) \
-	shell_error_impl(_sh, _ft "\n", ##__VA_ARGS__)
-void __printf_like(2, 3) shell_error_impl(const struct shell *sh, const char *fmt, ...);
+	shell_fprintf_error(_sh, _ft "\n", ##__VA_ARGS__)
+void __printf_like(2, 3) shell_fprintf_error(const struct shell *sh, const char *fmt, ...);
 
 /**
  * @brief Process function, which should be executed when data is ready in the

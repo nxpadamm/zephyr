@@ -5,6 +5,7 @@
  */
 
 #include <dt-bindings/pinctrl/ambiq-apollo3-pinctrl.h>
+#include "apollo3_evb_connector.dtsi"
 
 &pinctrl {
 	uart0_default: uart0_default {
@@ -93,6 +94,13 @@
 	spi5_default: spi5_default {
 		group1 {
 			pinmux = <M5SCK_P48>, <M5MISO_P49>, <M5MOSI_P47>;
+		};
+	};
+
+	adc0_default: adc0_default{
+		group1 {
+			pinmux = <ADCSE4_P32>, <ADCSE7_P35>;
+			drive-strength = "0.1";
 		};
 	};
 
