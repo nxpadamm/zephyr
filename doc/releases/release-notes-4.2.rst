@@ -51,7 +51,16 @@ API Changes
 Removed APIs and options
 ========================
 
+* Removed the deprecated the ``net_buf_put()`` and ``net_buf_get()`` API functions.
+
+* Removed the deprecated ``include/zephyr/net/buf.h`` header file.
+
 Deprecated APIs and options
+
+* The scheduler Kconfig options CONFIG_SCHED_DUMB and CONFIG_WAITQ_DUMB were
+  renamed and deprecated. Use :kconfig:option:`CONFIG_SCHED_SIMPLE` and
+  :kconfig:option:`CONFIG_WAITQ_SIMPLE` instead.
+
 ===========================
 
 New APIs and options
@@ -80,6 +89,11 @@ New APIs and options
   * Host
 
     * :c:func:`bt_le_get_local_features`
+    * :c:func:`bt_le_bond_exists`
+
+* Display
+
+  * :c:func:`display_clear`
 
 New Boards
 **********
