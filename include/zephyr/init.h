@@ -41,7 +41,7 @@ extern "C" {
  * - `SMP`: Only available if @kconfig{CONFIG_SMP} is enabled, specific for
  *   SMP.
  *
- * Initialization priority can take a value in the range of 0 to 99.
+ * Initialization priority can take a value in the range of 0 to 999.
  *
  * @note The same infrastructure is used by devices.
  * @{
@@ -108,9 +108,9 @@ struct init_entry {
  * linker scripts to sort them according to the specified
  * level/priority/sub-priority.
  */
-#define Z_INIT_ENTRY_SECTION(level, prio, sub_prio)                           \
-	__attribute__((__section__(                                           \
-		".z_init_" #level STRINGIFY(prio)"_" STRINGIFY(sub_prio)"_")))
+#define Z_INIT_ENTRY_SECTION(level, prio, sub_prio)                                                \
+	__attribute__((__section__(                                                                \
+		".z_init_" #level "_P_" STRINGIFY(prio) "_SUB_" STRINGIFY(sub_prio)"_")))
 
 /** @endcond */
 
@@ -166,7 +166,7 @@ struct init_entry {
 #define SYS_INIT_NAMED(name, init_fn_, level, prio)                                       \
 	static const Z_DECL_ALIGN(struct init_entry)                                      \
 		Z_INIT_ENTRY_SECTION(level, prio, 0) __used __noasan                      \
-		Z_INIT_ENTRY_NAME(name) = {.init_fn = (init_fn_)}                         \
+		Z_INIT_ENTRY_NAME(name) = {.init_fn = (init_fn_), .dev = NULL}            \
 
 /** @} */
 
