@@ -1,4 +1,7 @@
-# originates from common-rom.ld
+# SPDX-License-Identifier: Apache-2.0
+# The contents of this file is based on include/zephyr/linker/common-rom.ld
+# and som of include/zephyr/linker/common-rom/*.ld
+# Please keep in sync
 
 zephyr_linker_section(NAME init KVMA RAM_REGION GROUP RODATA_REGION)
 zephyr_linker_section_obj_level(SECTION init LEVEL EARLY)
@@ -17,10 +20,16 @@ if(CONFIG_GEN_SW_ISR_TABLE AND NOT CONFIG_DYNAMIC_INTERRUPTS)
     SECTION sw_isr_table
     INPUT ".gnu.linkonce.sw_isr_table*"
   )
+  if(CONFIG_SHARED_INTERRUPTS)
+    zephyr_linker_section_configure(
+      SECTION sw_isr_table
+      INPUT ".gnu.linkonce.shared_sw_isr_table*"
+    )
+  endif()
 endif()
 
 zephyr_linker_section(NAME initlevel_error KVMA RAM_REGION GROUP RODATA_REGION NOINPUT)
-zephyr_linker_section_configure(SECTION initlevel_error INPUT ".z_init_[_A-Z0-9]*" KEEP SORT NAME)
+zephyr_linker_section_configure(SECTION initlevel_error INPUT ".z_init_*" KEEP SORT NAME)
 # How to do cross linker ?
 # ASSERT(SIZEOF(initlevel_error) == 0, "Undefined initialization levels used.")
 
@@ -66,16 +75,7 @@ endif()
 if(CONFIG_USERSPACE)
   # Build-time assignment of permissions to kernel objects to
   # threads declared with K_THREAD_DEFINE()
-  zephyr_linker_section(
-    NAME k_object_assignment_area
-    VMA FLASH NOINPUT
-    SUBALIGN 4
-  )
-  zephyr_linker_section_configure(
-    SECTION k_object_assignment
-    INPUT ".k_object_assignment.static.*"
-    KEEP SORT NAME
-  )
+  zephyr_iterable_section(NAME k_object_assignment VMA FLASH SUBALIGN ${CONFIG_LINKER_ITERABLE_SUBALIGN})
 endif()
 
 zephyr_linker_section(

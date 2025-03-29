@@ -96,6 +96,8 @@ The Zephyr ``imx95_evk/mimx9596/m7`` board target supports the following hardwar
 +-----------+------------+-------------------------------------+
 | GPIO      | on-chip    | gpio                                |
 +-----------+------------+-------------------------------------+
+| NETC      | on-chip    | ethernet, mdio                      |
++-----------+------------+-------------------------------------+
 
 The Zephyr ``imx95_evk/mimx9596/a55`` and ``imx95_evk/mimx9596/a55/smp`` board targets support
 the following hardware features:
@@ -144,6 +146,13 @@ SPI
 
 The EVK board need to be reworked to solder R1217/R1218/R1219/R1220 with 0R resistances.
 SPI1 on J35 is enabled for M7.
+
+Ethernet
+--------
+
+NETC driver supports to manage the Physical Station Interface (PSI).
+The first ENET1 port could be enabled for M7 by west build option
+``-DEXTRA_DTC_OVERLAY_FILE=enetc_psi0.overlay``.
 
 
 Programming and Debugging (A55)
@@ -297,11 +306,8 @@ while, for the ``imx95_evk/mimx9596/m7/ddr`` board, you should get the following
 .. _MCUX SDK release:
    https://mcuxpresso.nxp.com/
 
-References
-==========
-
-More information can refer to NXP official website:
-`NXP website`_.
+.. include:: ../../common/board-footer.rst
+   :start-after: nxp-board-footer
 
 .. _NXP website:
    https://www.nxp.com/products/processors-and-microcontrollers/arm-processors/i-mx-applications-processors/i-mx-9-processors/i-mx-95-applications-processor-family-high-performance-safety-enabled-platform-with-eiq-neutron-npu:iMX95

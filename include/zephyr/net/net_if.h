@@ -1246,13 +1246,20 @@ static inline int net_if_set_link_addr_unlocked(struct net_if *iface,
 						uint8_t *addr, uint8_t len,
 						enum net_link_type type)
 {
+	int ret;
+
 	if (net_if_flag_is_set(iface, NET_IF_RUNNING)) {
 		return -EPERM;
 	}
 
-	net_if_get_link_addr(iface)->addr = addr;
-	net_if_get_link_addr(iface)->len = len;
-	net_if_get_link_addr(iface)->type = type;
+	if (len > sizeof(net_if_get_link_addr(iface)->addr)) {
+		return -EINVAL;
+	}
+
+	ret = net_linkaddr_create(net_if_get_link_addr(iface), addr, len, type);
+	if (ret < 0) {
+		return ret;
+	}
 
 	net_hostname_set_postfix(addr, len);
 
@@ -2201,6 +2208,32 @@ static inline struct net_if *net_if_ipv6_select_src_iface(
 #endif
 
 /**
+ * @brief Get a network interface that should be used when sending
+ * IPv6 network data to destination. Also return the source IPv6 address from
+ * that network interface.
+ *
+ * @param dst IPv6 destination address
+ * @param src_addr IPv6 source address. This can be set to NULL if the source
+ *                 address is not needed.
+ *
+ * @return Pointer to network interface to use, NULL if no suitable interface
+ * could be found.
+ */
+#if defined(CONFIG_NET_IPV6)
+struct net_if *net_if_ipv6_select_src_iface_addr(const struct in6_addr *dst,
+						 const struct in6_addr **src_addr);
+#else
+static inline struct net_if *net_if_ipv6_select_src_iface_addr(
+	const struct in6_addr *dst, const struct in6_addr **src_addr)
+{
+	ARG_UNUSED(dst);
+	ARG_UNUSED(src_addr);
+
+	return NULL;
+}
+#endif /* CONFIG_NET_IPV6 */
+
+/**
  * @brief Get a IPv6 link local address in a given state.
  *
  * @param iface Interface to use. Must be a valid pointer to an interface.
@@ -2580,6 +2613,32 @@ static inline struct net_if *net_if_ipv4_select_src_iface(
 	return NULL;
 }
 #endif
+
+/**
+ * @brief Get a network interface that should be used when sending
+ * IPv4 network data to destination. Also return the source IPv4 address from
+ * that network interface.
+ *
+ * @param dst IPv4 destination address
+ * @param src_addr IPv4 source address. This can be set to NULL if the source
+ *                 address is not needed.
+ *
+ * @return Pointer to network interface to use, NULL if no suitable interface
+ * could be found.
+ */
+#if defined(CONFIG_NET_IPV4)
+struct net_if *net_if_ipv4_select_src_iface_addr(const struct in_addr *dst,
+						 const struct in_addr **src_addr);
+#else
+static inline struct net_if *net_if_ipv4_select_src_iface_addr(
+	const struct in_addr *dst, const struct in_addr **src_addr)
+{
+	ARG_UNUSED(dst);
+	ARG_UNUSED(src_addr);
+
+	return NULL;
+}
+#endif /* CONFIG_NET_IPV4 */
 
 /**
  * @brief Get a IPv4 source address that should be used when sending

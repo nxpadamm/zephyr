@@ -299,6 +299,7 @@ BeagleBoard Platforms:
     - ayush1325
     - con-pax
     - vaishnavachath
+    - glneo
   files:
     - boards/beagle/
   labels:
@@ -364,9 +365,9 @@ Bluetooth Controller:
     - carlescufi
     - thoh-ot
     - ppryga
-    - mtpr-ot
     - wopu-ot
     - erbr-ot
+    - Tronil
   files:
     - doc/connectivity/bluetooth/bluetooth-ctlr-arch.rst
     - doc/connectivity/bluetooth/img/ctlr*
@@ -438,6 +439,7 @@ Bluetooth Host:
     - subsys/bluetooth/host/iso_internal.h
     - subsys/bluetooth/host/shell/iso.c
     - tests/bluetooth/audio/
+    - tests/bluetooth/classic/
     - tests/bluetooth/controller/
     - tests/bluetooth/mesh*/
     - tests/bluetooth/qualification/
@@ -534,6 +536,7 @@ Bluetooth Classic:
     - subsys/bluetooth/common/
     - subsys/bluetooth/host/classic/
     - include/zephyr/bluetooth/classic/
+    - tests/bluetooth/classic/
   labels:
     - "area: Bluetooth Classic"
     - "area: Bluetooth"
@@ -975,6 +978,7 @@ Display drivers:
   collaborators:
     - jfischer-no
     - danieldegrasse
+    - VynDragon
   files:
     - drivers/display/
     - dts/bindings/display/
@@ -1777,24 +1781,6 @@ Release Notes:
   tests:
     - drivers.ipm
 
-"Drivers: kscan":
-  status: maintained
-  maintainers:
-    - albertofloyd
-  collaborators:
-    - VenkatKotakonda
-  files:
-    - drivers/kscan/
-    - include/zephyr/drivers/kscan.h
-    - samples/drivers/kscan/
-    - tests/drivers/kscan/
-    - dts/bindings/kscan/
-    - doc/hardware/peripherals/kscan.rst
-  labels:
-    - "area: Kscan"
-  tests:
-    - drivers.kscan
-
 "Drivers: LED":
   status: maintained
   maintainers:
@@ -2084,7 +2070,7 @@ Release Notes:
   labels:
     - "area: Sensors"
   tests:
-    - drivers.sensors
+    - drivers.sensor
 
 "Drivers: SMBus":
   status: maintained
@@ -2129,6 +2115,7 @@ Release Notes:
     - dipakgmx
     - fabiobaltieri
     - faxe1008
+    - jbehrensnx
   files:
     - drivers/stepper/
     - include/zephyr/drivers/stepper.h
@@ -2136,6 +2123,7 @@ Release Notes:
     - doc/hardware/peripherals/stepper.rst
     - samples/drivers/stepper/
     - tests/drivers/build_all/stepper/
+    - tests/drivers/stepper/
   labels:
     - "area: Stepper"
   tests:
@@ -2772,8 +2760,11 @@ NEORV32 platform:
     - drivers/*/*neorv32*
     - dts/bindings/*/*neorv32*
     - soc/neorv32/
+    - tests/boards/neorv32/
   labels:
     - "platform: NEORV32"
+  tests:
+    - boards.neorv32
 
 OSDP:
   status: maintained
@@ -2875,7 +2866,6 @@ Networking:
     - include/zephyr/net/ieee802154*.h
     - include/zephyr/net/ptp.h
     - include/zephyr/net/wifi*.h
-    - include/zephyr/net/buf.h
     - include/zephyr/net/dhcpv4*.h
     - include/zephyr/net/http/
     - samples/net/gptp/
@@ -2928,7 +2918,6 @@ Networking:
     - jukkar
   files:
     - doc/services/net_buf/
-    - include/zephyr/net/buf.h
     - include/zephyr/net_buf.h
     - lib/net_buf/
     - tests/lib/net_buf/
@@ -3267,6 +3256,7 @@ RISCV arch:
     - carlocaione
     - npitre
     - ycsin
+    - VynDragon
   files:
     - arch/riscv/
     - boards/enjoydigital/litex_vexriscv/
@@ -3597,9 +3587,15 @@ Raspberry Pi Pico Platforms:
     - threeeights
     - ajf58
   files:
-    - boards/raspberrypi/
+    - boards/raspberrypi/rpi_pico*/
     - boards/adafruit/kb2040/
+    - boards/adafruit/macropad_rp2040/
+    - boards/adafruit/qt_py_rp2040/
+    - boards/pimoroni/pico_plus2/
+    - boards/seeed/xiao_rp2040/
     - boards/sparkfun/pro_micro_rp2040/
+    - boards/waveshare/rp2040_zero/
+    - boards/wiznet/w5500_evb_pico*/
     - dts/arm/raspberrypi/rpi_pico/
     - dts/bindings/*/raspberrypi,pico*
     - drivers/*/*rpi_pico
@@ -3622,9 +3618,11 @@ Silabs Platforms:
     - boards/silabs/
     - dts/arm/silabs/
     - dts/bindings/*/silabs*
-    - drivers/**/*gecko*
-    - drivers/**/*silabs*
-    - drivers/**/*siwx91x*
+    - drivers/*/*gecko*
+    - drivers/*/*silabs*
+    - drivers/*/*siwx91x*
+    - drivers/*/*/*silabs*
+    - drivers/*/*/*siwx91x*
     - tests/boards/silabs/
   labels:
     - "platform: Silabs"
@@ -4068,6 +4066,7 @@ Renesas RA Platforms:
     - dts/arm/renesas/ra/
     - dts/bindings/*/*renesas,ra*
     - soc/renesas/ra/
+    - samples/boards/renesas/
   labels:
     - "platform: Renesas RA"
   description: >-
@@ -4078,8 +4077,8 @@ Renesas RZ Platforms:
   status: maintained
   maintainers:
     - tgorochowik
-  collaborators:
     - binhnguyen2434
+  collaborators:
     - nhutnguyenkc
   files:
     - boards/renesas/rz*/
@@ -4257,6 +4256,7 @@ TI K3 Platforms:
   collaborators:
     - gramsay0
     - dnltz
+    - glneo
   files:
     - boards/ti/*am62*/
     - drivers/*/*davinci*
@@ -5011,9 +5011,6 @@ West:
     - bperseghetti
   files:
     - modules/hal_nxp/
-    - modules/Kconfig.imx
-    - modules/Kconfig.mcux
-    - modules/Kconfig.nxp_s32
   labels:
     - "platform: NXP"
 
@@ -5138,6 +5135,8 @@ West:
   maintainers:
     - nzmichaelh
     - kholia
+  collaborators:
+    - VynDragon
   files:
     - modules/hal_wch/
 
@@ -5684,8 +5683,8 @@ Testing with Renode:
     - cmake/emu/renode.cmake
     - soc/renode/
     - boards/renode/
-    - boards/**/*/support/*.repl
-    - boards/**/*/support/*.resc
+    - boards/*/*/support/*.repl
+    - boards/*/*/support/*.resc
   labels:
     - "area: Renode"
 

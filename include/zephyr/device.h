@@ -881,7 +881,7 @@ __syscall int device_init(const struct device *dev);
  * acquired (e.g. pins, memory, clocks, DMA channels, etc.) and its status will
  * be left as in its reset state.
  *
- * @warning It is the responsability of the caller to ensure that the device is
+ * @warning It is the responsibility of the caller to ensure that the device is
  * ready to be de-initialized.
  *
  * @param dev device to be de-initialized.
@@ -1241,7 +1241,8 @@ device_get_dt_nodelabels(const struct device *dev)
 	static const Z_DECL_ALIGN(struct init_entry) __used __noasan Z_INIT_ENTRY_SECTION(         \
 		level, prio, Z_DEVICE_INIT_SUB_PRIO(node_id))                                      \
 		Z_INIT_ENTRY_NAME(DEVICE_NAME_GET(dev_id)) = {                                     \
-			.dev = (const struct device *)&DEVICE_NAME_GET(dev_id)                     \
+			.init_fn = NULL,                                                           \
+			.dev = (const struct device *)&DEVICE_NAME_GET(dev_id),                    \
 		}
 
 /**

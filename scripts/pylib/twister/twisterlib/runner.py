@@ -61,7 +61,6 @@ import expr_parser
 from anytree import Node, RenderTree
 
 logger = logging.getLogger('twister')
-logger.setLevel(logging.DEBUG)
 
 
 class ExecutionCounter:
@@ -1351,7 +1350,7 @@ class ProjectBuilder(FilterBuilder):
         files_to_keep = self._get_binaries()
         files_to_keep.append(os.path.join('zephyr', 'runners.yaml'))
 
-        if self.instance.sysbuild:
+        if self.instance.sysbuild and self.instance.domains:
             files_to_keep.append('domains.yaml')
             for domain in self.instance.domains.get_domains():
                 files_to_keep += self._get_artifact_allow_list_for_domain(domain.name)
@@ -1391,7 +1390,7 @@ class ProjectBuilder(FilterBuilder):
         # Get binaries for a single-domain build
         binaries += self._get_binaries_from_runners()
         # Get binaries in the case of a multiple-domain build
-        if self.instance.sysbuild:
+        if self.instance.sysbuild and self.instance.domains:
             for domain in self.instance.domains.get_domains():
                 binaries += self._get_binaries_from_runners(domain.name)
 
@@ -1794,7 +1793,6 @@ class ProjectBuilder(FilterBuilder):
             instance.metrics["used_rom"] = 0
             instance.metrics["available_rom"] = 0
             instance.metrics["available_ram"] = 0
-            instance.metrics["unrecognized"] = []
         return build_result
 
     @staticmethod
@@ -1810,13 +1808,11 @@ class ProjectBuilder(FilterBuilder):
                 instance.metrics["used_rom"] = size_calc.get_used_rom()
                 instance.metrics["available_rom"] = size_calc.get_available_rom()
                 instance.metrics["available_ram"] = size_calc.get_available_ram()
-                instance.metrics["unrecognized"] = size_calc.unrecognized_sections()
             else:
                 instance.metrics["used_ram"] = 0
                 instance.metrics["used_rom"] = 0
                 instance.metrics["available_rom"] = 0
                 instance.metrics["available_ram"] = 0
-                instance.metrics["unrecognized"] = []
             instance.metrics["handler_time"] = instance.execution_time
 
 class TwisterRunner:
@@ -1892,7 +1888,6 @@ class TwisterRunner:
                 else:
                     inst.metrics.update(self.instances[inst.name].metrics)
                     inst.metrics["handler_time"] = inst.execution_time
-                    inst.metrics["unrecognized"] = []
                     self.instances[inst.name] = inst
 
             print("")

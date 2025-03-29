@@ -198,6 +198,14 @@
 				channel = <0>;
 				status = "disabled";
 			};
+
+			i2c {
+				compatible = "renesas,ra-i2c-sci-b";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				channel = <0>;
+				status = "disabled";
+			};
 		};
 
 		sci1: sci1@40358100 {
@@ -209,6 +217,14 @@
 			status = "disabled";
 			uart {
 				compatible = "renesas,ra8-uart-sci-b";
+				channel = <1>;
+				status = "disabled";
+			};
+
+			i2c {
+				compatible = "renesas,ra-i2c-sci-b";
+				#address-cells = <1>;
+				#size-cells = <0>;
 				channel = <1>;
 				status = "disabled";
 			};
@@ -226,6 +242,14 @@
 				channel = <2>;
 				status = "disabled";
 			};
+
+			i2c {
+				compatible = "renesas,ra-i2c-sci-b";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				channel = <2>;
+				status = "disabled";
+			};
 		};
 
 		sci3: sci3@40358300 {
@@ -237,6 +261,14 @@
 			status = "disabled";
 			uart {
 				compatible = "renesas,ra8-uart-sci-b";
+				channel = <3>;
+				status = "disabled";
+			};
+
+			i2c {
+				compatible = "renesas,ra-i2c-sci-b";
+				#address-cells = <1>;
+				#size-cells = <0>;
 				channel = <3>;
 				status = "disabled";
 			};
@@ -254,6 +286,14 @@
 				channel = <4>;
 				status = "disabled";
 			};
+
+			i2c {
+				compatible = "renesas,ra-i2c-sci-b";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				channel = <4>;
+				status = "disabled";
+			};
 		};
 
 		sci9: sci9@40358900 {
@@ -265,6 +305,14 @@
 			status = "disabled";
 			uart {
 				compatible = "renesas,ra8-uart-sci-b";
+				channel = <9>;
+				status = "disabled";
+			};
+
+			i2c {
+				compatible = "renesas,ra-i2c-sci-b";
+				#address-cells = <1>;
+				#size-cells = <0>;
 				channel = <9>;
 				status = "disabled";
 			};
@@ -771,6 +819,13 @@
 			status = "disabled";
 		};
 
+		wdt: wdt@40083400 {
+			compatible = "renesas,ra-wdt";
+			reg = <0x40083400 0x200>;
+			clocks = <&pclkb 0 0>;
+			status = "disabled";
+		};
+
 		usbfs: usbfs@40250000 {
 			compatible = "renesas,ra-usbfs";
 			reg = <0x40250000 0x2000>;
@@ -783,6 +838,24 @@
 
 			udc {
 				compatible = "renesas,ra-udc";
+				status = "disabled";
+			};
+		};
+
+		acmphs_global: acmphs_global@40236000 {
+			compatible = "renesas,ra-acmphs-global";
+			reg = <0x40236000 0x200>;
+			status = "disabled";
+
+			acmphs0: acmphs0 {
+				compatible = "renesas,ra-acmphs";
+				channel = <0>;
+				status = "disabled";
+			};
+
+			acmphs1: acmphs1 {
+				compatible = "renesas,ra-acmphs";
+				channel = <1>;
 				status = "disabled";
 			};
 		};

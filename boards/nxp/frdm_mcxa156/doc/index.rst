@@ -71,6 +71,8 @@ The FRDM-MCXA156 board configuration supports the following hardware features:
 +-----------+------------+-------------------------------------+
 | I2C       | on-chip    | i2c                                 |
 +-----------+------------+-------------------------------------+
+| I3C       | on-chip    | i3c                                 |
++-----------+------------+-------------------------------------+
 | LPCMP     | on-chip    | sensor(comparator)                  |
 +-----------+------------+-------------------------------------+
 | LPSPI     | on-chip    | spi                                 |
@@ -209,6 +211,9 @@ Troubleshooting
 
 .. include:: ../../common/segger-ecc-systemview.rst
    :start-after: segger-ecc-systemview
+
+.. include:: ../../common/board-footer.rst
+   :start-after: nxp-board-footer
 
 .. _MCX-A156 SoC Website:
    https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/mcx-arm-cortex-m/mcx-a-series-microcontrollers/mcx-a13x-14x-15x-mcus-with-arm-cortex-m33-scalable-device-options-low-power-and-intelligent-peripherals:MCX-A13X-A14X-A15X
